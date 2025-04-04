@@ -1,0 +1,21 @@
+{
+  "name": "pwb",
+  "length": 18,
+  "likert": {
+    "min": 1,
+    "max": 6
+  },
+  "scales": [
+    ["sa", [1,15], [16]],
+    ["pl", [5], [2,7]],
+    ["pg", [4,8], [9]],
+    ["pr", [3,14], [18]],
+    ["au", [6,13], [10]],
+    ["em", [11,12], [17]]
+  ],
+  "norms": {
+    "type_of_raw_score": "raw",
+    "available_norms" : [ "eu_comm" ]
+  },
+  "report": "base_report"
+}

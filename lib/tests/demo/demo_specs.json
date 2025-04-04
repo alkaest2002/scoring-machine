@@ -1,0 +1,18 @@
+{
+  "name": "demo",
+  "length": 12,
+  "likert": {
+    "min": 0,
+    "max": 1
+  },
+  "scales": [
+    ["s1", [1,2,3,4,5,6], []],
+    ["s2", [], [7,8,9,10,11,12]],
+    ["s3", [1,2,3,4,5,6], [7,8,9,10,11,12]]
+  ],
+  "norms": {
+    "available_norms" : ["ita_comm", "ita_clin"],
+    "type_of_raw_score": "raw"
+  },
+  "report": "base_report"
+}

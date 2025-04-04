@@ -1,0 +1,28 @@
+{% extends "_base/_base.html" %}
+
+{% block body %}
+    {% for test_results in data.test_results %}
+        <div class="page">
+            <div>
+                <h1 class="report-title">Report Demo</h1>
+                <div class="report-bio">
+                    {{ subject_data(test_results) }}
+                </div>
+                <table class="table-apa table-alternate-color full-width">
+                    <thead>
+                        {{ table_header(data.test_specs) }}
+                    </thead>
+                    <tbody>
+                        {{ table_row("dep", "Temperamento depressivo", test_results, data.test_specs) }}
+                        {{ table_row("cyc", "Temperamento ciclotimico", test_results, data.test_specs) }}
+                        {{ table_row("hyp", "Temperamento ipertimico", test_results, data.test_specs) }}
+                        {{ table_row("irr", "Tempertamento irritabile", test_results, data.test_specs) }}
+                        {{ table_row("anx", "Temperamento ansioso", test_results, data.test_specs) }}
+                    </tbody>
+                </table>
+                {{ table_footer(5) }}
+            </div>
+            {{ page_footer() }}
+        </div>
+    {% endfor %}
+{% endblock %}

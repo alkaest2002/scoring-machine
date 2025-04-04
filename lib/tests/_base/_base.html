@@ -1,0 +1,286 @@
+{% macro table_header(test_specs) %}
+    {% set type_of_raw_score_labels = dict(raw='PG', raw_corrected="PC", mean="PM") %}
+    {% set type_of_raw_score = type_of_raw_score_labels[test_specs.norms.type_of_raw_score] %}
+    <tr>
+        <th>Codice</th>
+        <th>Nome scala</th>
+        <th class="text-center">RO</th>
+        <th class="text-center">PG</th>
+        <th class="text-center">PC</th>
+        <th class="text-center">PM</th>
+        <th class="text-center">PS ({{ type_of_raw_score }})</th>
+    </tr>
+{% endmacro %}
+
+{% macro subject_data(subject_data) %}
+    <span>Codice soggetto:</span> <span class="text-bold">{{ subject_data.subject_id | upper }}</span> | 
+    <span>Norme impiegate:</span> <span class="text-bold">{{ subject_data.norms_id | upper | replace("_", "-") | replace(" ", ", ") }}</span> | 
+    <span>Data valutazione:</span> <span class="text-bold">{{ assessment_date }}</span>
+{% endmacro %}
+
+{% macro table_row(scale_code, scale_name, scale_data, test_specs)  %}
+    <tr>
+        <td class="scale-code">{{ scale_code | upper | replace("_", " ") }}</td>
+        <td>{{ scale_name }}</td>
+        <td class="score">{{ scale_data["missing__" +scale_code] }}</td>
+        <td class="score">{{ scale_data["raw__" +scale_code] }}</td>
+        <td class="score">{{ scale_data["raw_corrected__" +scale_code] }}</td>
+        <td class="score">{{ scale_data["mean__" +scale_code] }}</td>
+        <td class="score">
+            {% set std_raw_label = "std_raw__" + scale_code %}
+            {% if std_raw_label in scale_data  %}
+                {% set standard_scores_obj = scale_data["std_raw__" + scale_code] %}
+            {% endif %}
+            {% set std_raw_label = "std_raw_corrected__" + scale_code %}
+            {% if std_raw_label in scale_data   %}
+                {% set standard_scores_obj = scale_data["std_raw_corrected__" + scale_code] %}
+            {% endif %}
+            {% set std_raw_label = "std_mean__" + scale_code %}
+            {% if std_raw_label in scale_data  %}
+                {% set standard_scores_obj = scale_data["std_mean__" + scale_code] %}
+            {% endif %}
+            {% if standard_scores_obj %}
+                {% for norms_label, norms_value in standard_scores_obj.items() %}
+                    <div class="flex-container std-score">
+                        {% if not "interpretation" in norms_label %}
+                            <div>{{ norms_value }}</div>
+                        {% endif %}
+                        {% set norms_intepretation = norms_label + "_interpretation" %}
+                        {% if norms_intepretation in standard_scores_obj %}
+                            <div>{{ standard_scores_obj[norms_intepretation] }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div><span>n.d.</span></div>
+            {% endif %}
+        </td>
+    </tr>
+{% endmacro %}
+
+{% macro table_footer(n_legend) %}
+{% if n_legend %}
+    <div class="table-apa-footer">
+        <p>
+            RO Omesse &nbsp; PG Grezzo &nbsp; PC Grezzo corretto &nbsp; PM Media &nbsp; PS Standard
+        </p>
+        {% if n_legend == 7 %}
+        <p>
+            ꜜꜜꜜ Estr. basso &nbsp; ꜜꜜ Molto basso &nbsp; ꜜ Basso &nbsp; ◦ Medio &nbsp; ꜛ Alto &nbsp; ꜛꜛ Molto alto &nbsp; ꜛꜛꜛ Estr. alto
+        </p>
+        {% endif %}
+        {% if n_legend == 5 %}
+            <p>
+                ꜜꜜ Molto basso &nbsp; ꜜ Basso &nbsp; ◦ Medio &nbsp; ꜛ Alto &nbsp; ꜛꜛ Molto alto
+            </p>
+        {% endif %}
+        {% if n_legend == 3 %}
+            <p>
+                ꜜ Basso &nbsp; ◦ Medio &nbsp; ꜛ Alto
+            </p>
+        {% endif %}
+    </div>
+{% endif %}
+{% endmacro %}
+
+{% macro page_footer() %}
+    <div class="page-footer">
+        <p>
+            T-SMP The Scoring Machine Project
+        </p>
+        <p>
+            © 2025 Tutti i diritti riservati
+        </p>
+    </div>
+{% endmacro %}
+
+<!doctype html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <style>
+        :root {
+            --base-primary-color: #000;
+            --base-muted-color: #999;
+            --base-font-size-small: 8pt;
+            --base-font-size: 10pt;
+            --base-font-line-height: 14pt;
+            --base-spacing: 3pt;
+            --base-spacing-2x: 6pt;
+            --base-spacing-4x: 12pt;
+            --base-spacing-8x: 24pt;
+            --base-score-width: 70px;
+            --base-border-width: 1px;
+            --base-border-thin-width: .5px;
+            --base-border-color: #333;
+            --base-table-alternate-color: #eee;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-weight: normal;
+            font-family: "Times New Roman", Times, serif;
+            font-size: var(--base-font-size);
+            line-height: var(--base-font-line-height);
+            color: var(--base-primary-color)
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+            padding: 10mm;
+            width: 210mm;
+            height: 297mm;
+        }
+
+        body {
+            margin: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+        td,th {
+            padding: var(--base-spacing) var(--base-spacing-2x);
+        }
+
+        tfoot td,tfoot th {
+            padding: var(--base-spacing) 0;
+        }
+
+        .page {
+            height: 297mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+        }
+
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            padding-top: var(--base-spacing);
+            border-top: var(--base-border-width) solid var(--base-border-color);
+        }
+        
+        .page-footer p {
+            font-size: var(--base-font-size-small);
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .text-italic {
+            font-style: italic;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-justify {
+            text-align: justify;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .flex-container {
+            display:flex;
+            justify-content: center;
+        }
+
+        .scale-code {
+            width: var(--base-score-width);
+        }
+
+        .score {
+            width: var(--base-score-width);
+            text-align: center;
+        }
+
+        .std-score > div {
+            flex: 1;
+            padding: 0 var(--base-spacing);
+        }
+
+        .std-score div:first-child {
+            flex-grow: 1;
+            text-align: right;
+        }
+
+        .std-score div:first-child:not(:has(+ div)) {
+            text-align: center
+        }
+
+        .report-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        .report-bio {
+            margin-top: var(--base-spacing-8x);
+            margin-bottom: var(--base-spacing-4x);
+        }
+
+        .table-apa {
+            margin-top: var(--base-spacing);
+        }
+
+        .table-apa:not(:first-of-type) {
+            margin-top: var(--base-spacing-double);
+        }
+
+        .table-apa >thead>tr:first-child {
+            border-top: var(--base-border-width) solid var(--base-border-color);
+            border-bottom: var(--base-border-thin-width) solid var(--base-border-color);
+        }
+
+        .table-apa >tbody>tr:last-child {
+            border-bottom: var(--base-border-width) solid var(--base-border-color);
+        }
+
+        .table-apa-footer {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .table-apa-footer p {
+            font-size: var(--base-font-size-small);
+        }
+
+        .table-apa-footer p {
+            margin-top: var(--base-spacing);
+        }
+
+        .table-alternate-color > tbody > tr:nth-child(even) {
+            background-color: var(--base-table-alternate-color);
+        }
+    </style>
+    {% block style %}{% endblock %}
+</head>
+
+<body>
+    {% block body %}{% endblock %}
+</body>
+</html>

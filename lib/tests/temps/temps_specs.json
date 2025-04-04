@@ -1,0 +1,20 @@
+{
+  "name": "temps",
+  "length": 35,
+  "likert": {
+    "min": 1,
+    "max": 5
+  },
+  "scales": [
+    ["dep", [1, 6, 11, 16, 21, 26, 32], []],
+    ["cyc", [2, 7, 12, 17, 22, 27, 31, 35], []],
+    ["hyp", [3, 8, 13, 18, 23, 28, 33], []],
+    ["irr", [4, 9, 14, 19, 24, 29, 34], []],
+    ["anx", [5, 10, 15, 20, 25, 30], []]
+  ],
+  "norms": {
+    "available_norms" : ["eu_comm"],
+    "type_of_raw_score": "raw"
+  },
+  "report": "base_report"
+}

@@ -22,17 +22,17 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-n", "--compute_norms",
-    choices=["0", "1"],
-    default="1",
-    help="Specify whether to compute standard scores. Default is '1' (compute norms)."
+    "-x", "--do_not_compute_standard_scores",
+    action="store_true",
+    default=False,
+    help="Specify whether to compute standard scores using norms. Default is true (compute)."
 )
 
 parser.add_argument(
-    "-e", "--expand_norms",
-    choices=["0", "1"],
-    default="0",
-    help="Specify whether to expand dictionary-like columns in the results (0 = No, 1 = Yes). Default is 0 (do not expand)."
+    "-e", "--expand_standard_scores",
+    action="store_true",
+    default=False,
+    help="Specify whether to expand dictionary-like columns in the results. Default is false (do not expand)."
 )
 
 parser.add_argument(

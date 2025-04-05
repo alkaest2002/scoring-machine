@@ -43,15 +43,14 @@ def process(args: argparse.Namespace) -> None:
         # Step 4: Compute raw scores, corrected raw scores, and mean scores using Scorer
         data_container: DataContainer = Scorer(data_container).compute_raw_related_scores()
 
-        # Step 5: Compute standard scores if requested
-        if args.compute_norms == "1":
-            # Initialize Standardizer to compute scores based on norms
+        # Step 5: Compute standard scores based on norms if not excluded
+        if not args.do_not_compute_standard_scores:
             data_container: DataContainer = Standardizer(data_container).compute_standard_scores()
 
         # Step 6: Branch based on the requested output type
         if args.output_type != "pdf":
             # Persist cleaned and processed data
-            data_container.persist(type=args.output_type, expand_norms=args.expand_norms)
+            data_container.persist(type=args.output_type, expand_standard_scores=args.expand_standard_scores)
         else:
             # Generate and render a PDF report
             Reporter(data_container).render_report(assessment_date=args.assessment_date)

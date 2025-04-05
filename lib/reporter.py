@@ -54,7 +54,7 @@ class Reporter:
         rendered_template: str = self.report_template.render(data=self.report_data, assessment_date=assessment_date)
         
         # Define the output file path
-        output_filepath: Path = XEROX_PATH / f"{self.test_name}.pdf"
+        output_filepath: Path = XEROX_PATH / f"{self.test_name}_report.pdf"
         
         # Convert the rendered HTML content to a PDF and save it to the determined output path
         HTML(string=rendered_template).write_pdf(output_filepath)

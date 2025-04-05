@@ -17,13 +17,10 @@ def process(args: argparse.Namespace) -> None:
     format (CSV, JSON, or PDF).
 
     Args:
-        args (argparse.Namespace): The namespace containing arguments parsed from the 
-                                   command line.
+        args (argparse.Namespace): arguments parsed from the command line.
             args.test (str): Identifier for the test.
-            args.compute_norms (str): Flag ("1" or "0") indicating whether to compute 
-                                      standard scores using norms.
+            args.do_not_compute_standard_scores (bool): whether to compute standard scores.
             args.output_type (str): Type of output to generate ("csv", "json", or "pdf").
-            args.expand_norms (bool): Whether to expand norms data in the output file.
             args.assessment_date (str): Assessment date for inclusion in reports.
 
     Raises:

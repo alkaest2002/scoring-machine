@@ -25,14 +25,14 @@ parser.add_argument(
     "-x", "--do_not_compute_standard_scores",
     action="store_true",
     default=False,
-    help="Specify whether to compute standard scores using norms. Default is true (compute)."
+    help="Specify whether to skip standard scores. Default is false (i.e., compute)."
 )
 
 parser.add_argument(
     "-e", "--expand_standard_scores",
     action="store_true",
     default=False,
-    help="Specify whether to expand dictionary-like columns in the results. Default is false (do not expand)."
+    help="Specify whether to expand dictionary-like standard scores. Default is false (do not expand)."
 )
 
 parser.add_argument(

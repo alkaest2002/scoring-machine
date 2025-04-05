@@ -25,7 +25,7 @@ parser.add_argument(
     "-x", "--do_not_compute_standard_scores",
     action="store_true",
     default=False,
-    help="Specify whether to skip standard scores. Default is false (i.e., compute)."
+    help="Specify whether to skip computation of standard scores. Default is false (i.e., compute)."
 )
 
 parser.add_argument(

@@ -29,13 +29,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-e", "--expand_standard_scores",
-    action="store_true",
-    default=False,
-    help="Specify whether to expand dictionary-like standard scores. Default is false (do not expand)."
-)
-
-parser.add_argument(
     "-o", "--output_type",
     choices=["csv", "json", "pdf"],
     default="pdf",

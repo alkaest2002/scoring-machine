@@ -50,7 +50,7 @@ def process(args: argparse.Namespace) -> None:
         # Step 6: Branch based on the requested output type
         if args.output_type != "pdf":
             # Persist cleaned and processed data
-            data_container.persist(type=args.output_type, expand_standard_scores=args.expand_standard_scores)
+            data_container.persist(type=args.output_type)
         else:
             # Generate and render a PDF report
             Reporter(data_container).render_report(assessment_date=args.assessment_date)

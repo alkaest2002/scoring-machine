@@ -109,16 +109,12 @@ class DataContainer:
             "test_results": json.loads(self.data_results.replace({np.nan: None}).to_json(orient="records"))
         }
 
-    def persist(self, type: Literal["csv", "json"], expand_standard_scores: bool) -> None:
+    def persist(self, type: Literal["csv", "json"]) -> None:
         """
         Exports test results in the specified format, either CSV or JSON.
 
         Args:
             type (str): Desired output format ('csv' or 'json').
-            expand_norms (str): Additional arguments for the respective export methods.
-
-        Raises:
-            ValueError: If the specified export format is unsupported.
         """
         if type == "csv":
             
@@ -126,8 +122,7 @@ class DataContainer:
             data_to_persist = self.data_results.copy()
             
             # Expand dictionary-like columns if requested
-            if expand_standard_scores:
-                data_to_persist = expand_dict_like_columns(data_to_persist, regex_for_dict_like="std_")
+            data_to_persist = expand_dict_like_columns(data_to_persist, regex_for_dict_like="std_")
             
         else:
             # Create a copy of test data

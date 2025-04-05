@@ -78,7 +78,7 @@ class DataContainer:
         return self.data.loc[:, "subject_id"]
 
     @cached_property # can be cached since it is not modified
-    def data_results(self) -> pd.DataFrame:
+    def results(self) -> pd.DataFrame:
         """
         Combines subject ids, answers data (`data_subject_ids`, `data_answers`), raw test scores (`test_scores`) 
         and standardized scores (`test_standard_scores`) into a single DataFrame.
@@ -93,7 +93,7 @@ class DataContainer:
             self.test_standard_scores], axis=1)
     
     @cached_property # can be cached since it is not modified
-    def data_all(self) -> dict:
+    def test_specs_and_results(self) -> dict:
         """
         Aggregates test specifications, raw test data, and test results 
         into a structured dictionary.
@@ -106,7 +106,7 @@ class DataContainer:
         """
         return {
             "test_specs": self.test_specs.get_spec(None),
-            "test_results": json.loads(self.data_results.replace({np.nan: None}).to_json(orient="records"))
+            "test_results": json.loads(self.results.replace({np.nan: None}).to_json(orient="records"))
         }
 
     def persist(self, type: Literal["csv", "json"]) -> None:
@@ -119,14 +119,14 @@ class DataContainer:
         if type == "csv":
             
             # Create a copy of test results
-            data_to_persist = self.data_results.copy()
+            data_to_persist = self.results.copy()
             
             # Expand dictionary-like columns if requested
             data_to_persist = expand_dict_like_columns(data_to_persist, regex_for_dict_like="std_")
             
         else:
             # Create a copy of test data
-            data_to_persist = self.data_all.copy()
+            data_to_persist = self.test_specs_and_results.copy()
         
         # Persist the data to disk
         self.data_provider.persist(data_to_persist)

@@ -23,13 +23,13 @@ class Reporter:
                                            and template specifications.
         """
         # Store all report-related data sourced from the DataContainer
-        self.report_data: dict = data_container.data_all
+        self.report_data: dict = data_container.test_specs_and_results
 
         # Store test name from test specifications
-        self.test_name: str = data_container.data_all["test_specs"]["name"]
+        self.test_name: str = data_container.test_specs_and_results["test_specs"]["name"]
         
         # Store the report template name specified in the test specifications
-        self.report_name: str = data_container.data_all["test_specs"]["report"]
+        self.report_name: str = data_container.test_specs_and_results["test_specs"]["report"]
         
         # Store the specified HTML template for the report via Jinja2
         self.report_template = jinja_env.get_template(str(Path(self.test_name) / f"{self.report_name}.html"))

@@ -9,39 +9,37 @@
 {% endblock %}
 
 {% block body %}
-    {% for test_results in data.test_results %}
-        <div class="page">
-            <div>
-                <h1 class="report-title">Report CORE</h1>
-                <div class="report-bio">
-                    {{ subject_data(test_results) }}
-                </div>
-                <div class="core-flags">
-                    {% set i6 = test_results["i6"] %}
-                    {% set i9 = test_results["i9"] %}
-                    {% set i16 = test_results["i16"] %}
-                    {% set i22 = test_results["i22"] %}
-                    {% set i24 = test_results["i24"] %}
-                    {% set i34 = test_results["i34"] %}
-                    <p>Presenza di risposte anti-convervative &rarr; {% if i9+i16+i24+i34 > 0 %}<span class="text-bold">Sì</span>{% else %}<span class="text-italic">No</span>{% endif %}</p> 
-                    <p>Presenza di risposte etero-aggressive &rarr; {% if i6+i22 > 0 %}<span class="text-bold">Sì</span>{% else %}<span class="text-italic">No</span>{% endif %}</p> 
-                </div>
-                <table class="table-apa table-alternate-color full-width">
-                    <thead>
-                        {{ table_header(data.test_specs) }}
-                    </thead>
-                    <tbody>
-                        {{ table_row("wb", "Disagio psicologico", test_results, data.test_specs) }}
-                        {{ table_row("pro", "Problemi riferiti", test_results, data.test_specs) }}
-                        {{ table_row("fun", "Mancanza di efficacia personale e/o sociale", test_results, data.test_specs) }}
-                        {{ table_row("risk", "Ideazione/Condotte auto o etero-aggressive", test_results, data.test_specs) }}
-                        {{ table_row("tot_risk", "Totale (senza item risk)", test_results, data.test_specs) }}
-                        {{ table_row("tot", "Totale", test_results, data.test_specs) }}
-                    </tbody>
-                </table>
-                {{ table_footer(5) }}
+    <div class="page">
+        <div>
+            <h1 class="report-title">Report CORE</h1>
+            <div class="report-bio">
+                {{ subject_data(test_results) }}
             </div>
-            {{ page_footer() }}
+            <div class="core-flags">
+                {% set i6 = test_results["i6"] %}
+                {% set i9 = test_results["i9"] %}
+                {% set i16 = test_results["i16"] %}
+                {% set i22 = test_results["i22"] %}
+                {% set i24 = test_results["i24"] %}
+                {% set i34 = test_results["i34"] %}
+                <p>Presenza di risposte anti-convervative &rarr; {% if i9+i16+i24+i34 > 0 %}<span class="text-bold">Sì</span>{% else %}<span class="text-italic">No</span>{% endif %}</p> 
+                <p>Presenza di risposte etero-aggressive &rarr; {% if i6+i22 > 0 %}<span class="text-bold">Sì</span>{% else %}<span class="text-italic">No</span>{% endif %}</p> 
+            </div>
+            <table class="table-apa table-alternate-color full-width">
+                <thead>
+                    {{ table_header(test_specs) }}
+                </thead>
+                <tbody>
+                    {{ table_row("wb", "Disagio psicologico", test_results, test_specs) }}
+                    {{ table_row("pro", "Problemi riferiti", test_results, test_specs) }}
+                    {{ table_row("fun", "Mancanza di efficacia personale e/o sociale", test_results, test_specs) }}
+                    {{ table_row("risk", "Ideazione/Condotte auto o etero-aggressive", test_results, test_specs) }}
+                    {{ table_row("tot_risk", "Totale (senza item risk)", test_results, test_specs) }}
+                    {{ table_row("tot", "Totale", test_results, test_specs) }}
+                </tbody>
+            </table>
+            {{ table_footer(5) }}
         </div>
-    {% endfor %}
+        {{ page_footer() }}
+    </div>
 {% endblock %}

@@ -21,6 +21,7 @@ def process(args: argparse.Namespace) -> None:
             args.test (str): Identifier for the test.
             args.do_not_compute_standard_scores (bool): whether to compute standard scores.
             args.output_type (str): Type of output to generate ("csv", "json", or "pdf").
+            args.split_reports (bool): Whether to split PDF reports or keep them in a single file.
             args.assessment_date (str): Assessment date for inclusion in reports.
 
     Raises:
@@ -46,11 +47,14 @@ def process(args: argparse.Namespace) -> None:
 
         # Step 6: Branch based on the requested output type
         if args.output_type != "pdf":
-            # Persist cleaned and processed data
+            # Persist data
             data_container.persist(type=args.output_type)
         else:
-            # Generate and render a PDF report
-            Reporter(data_container).render_report(assessment_date=args.assessment_date)
+            # Generate PDF report(s)
+            Reporter(data_container).render_report(
+                assessment_date=args.assessment_date, 
+                split_reports=args.split_reports
+            )
 
     except Exception as e:
         # Log the error message for debugging purposes.

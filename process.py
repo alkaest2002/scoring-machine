@@ -36,6 +36,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "-s", "--split_reports",
+    action="store_true",
+    default=False,
+    help="Specify whether to split PDF reports. Default is false (i.e. keep reports is a single PDF file)"
+)
+
+parser.add_argument(
     "-d", "--assessment_date",
     default=date.today().strftime('%d/%m/%Y'),
     help="Specify the assesment date. Default is the current date."

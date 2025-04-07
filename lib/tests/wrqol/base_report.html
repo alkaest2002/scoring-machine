@@ -11,13 +11,13 @@
 {% block body %}
     <div class="page">
         <div>
-            <h1 class="report-title">Report Demo</h1>
+            <h1 class="report-title">Report WRQOL</h1>
             <div class="report-bio">
                 {{ subject_data(test_results) }}
             </div>
             <div class="wrqol-flags">
                 {% set global_sat = test_results["i24"] %}
-                <p>Soddisfazione complessiva &rarr; 
+                <p>Qualità complessiva della vita lavorativa &rarr; 
                     {% if global_sat == 0 %}<span class="text-bold">Non valutabile</span>{% endif %}
                     {% if global_sat == 1 %}<span class="text-bold">Molto bassa</span>{% endif %}
                     {% if global_sat == 2 %}<span class="text-bold">Bassa</span>{% endif %}
@@ -31,7 +31,7 @@
                     {{ table_header(test_specs) }}
                 </thead>
                 <tbody>
-                    {{ table_row("wrqol", "Indice generale", test_results, test_specs) }}
+                    {{ table_row("wrqol", "Indice generale WRQOL", test_results, test_specs) }}
                     {{ table_row("gwb", "Benessere soggettivo", test_results, test_specs) }}
                     {{ table_row("jcs", "Soddisfazione lavorativa", test_results, test_specs) }}
                     {{ table_row("caw", "Autonomia sul lavoro", test_results, test_specs) }}

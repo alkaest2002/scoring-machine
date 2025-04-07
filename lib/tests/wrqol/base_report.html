@@ -12,13 +12,13 @@
                     {{ table_header(test_specs) }}
                 </thead>
                 <tbody>
+                    {{ table_row("tot", "Indice generale", test_results, test_specs) }}
                     {{ table_row("gwb", "Benessere lavorativo", test_results, test_specs) }}
                     {{ table_row("jcs", "Soddisfazione lavorativa", test_results, test_specs) }}
                     {{ table_row("caw", "Automia sul lavoro", test_results, test_specs) }}
-                    {{ table_row("wcs", "Condizioni di lavoro", test_results, test_specs) }}
-                    {{ table_row("saw", "Stress lavorativo", test_results, test_specs) }}
+                    {{ table_row("wcs", "Adeguatezza delle condizioni di lavoro", test_results, test_specs) }}
+                    {{ table_row("saw", "Adeguatezza dei carichi di lavoro", test_results, test_specs) }}
                     {{ table_row("hwi", "Equilibrio casa-lavoro", test_results, test_specs) }}
-                    {{ table_row("tot", "Indice generale", test_results, test_specs) }}
                 </tbody>
             </table>
             {{ table_footer(7) }}

@@ -110,7 +110,7 @@ class Reporter:
 
                 if split_reports:
                     # Generate individual PDF report for each test result
-                    output_filepath: Path = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(2)}-{str(report_index).zfill(3)}-{str((batch_index-1) * reports_per_batch + report_index).zfill(4)}-{test_results['subject_id']}.pdf"
+                    output_filepath: Path = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(2)}{str(report_index).zfill(3)}{str((batch_index-1) * reports_per_batch + report_index).zfill(4)}-{test_results['subject_id']}.pdf"
                     
                     # Persist the rendered HTML as a PDF file
                     HTML(string=rendered_template).write_pdf(output_filepath)

@@ -99,7 +99,8 @@ class DataProvider:
             FileNotFoundError: If the data file does not exist.
         """
         data_filepath = self.get_test_path("data")
-        return pd.read_csv(data_filepath)
+        # Read max 1000 rows
+        return pd.read_csv(data_filepath, nrows=1000)
 
     def load_test_specifications(self) -> dict:
         """

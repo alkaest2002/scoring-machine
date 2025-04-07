@@ -1,0 +1,28 @@
+{% extends "_base/_base.html" %}
+
+{% block body %}
+    <div class="page">
+        <div>
+            <h1 class="report-title">Report Demo</h1>
+            <div class="report-bio">
+                {{ subject_data(test_results) }}
+            </div>
+            <table class="table-apa table-alternate-color full-width">
+                <thead>
+                    {{ table_header(test_specs) }}
+                </thead>
+                <tbody>
+                    {{ table_row("gwb", "Benessere lavorativo", test_results, test_specs) }}
+                    {{ table_row("jcs", "Soddisfazione lavorativa", test_results, test_specs) }}
+                    {{ table_row("caw", "Automia sul lavoro", test_results, test_specs) }}
+                    {{ table_row("wcs", "Condizioni di lavoro", test_results, test_specs) }}
+                    {{ table_row("saw", "Stress lavorativo", test_results, test_specs) }}
+                    {{ table_row("hwi", "Equilibrio casa-lavoro", test_results, test_specs) }}
+                    {{ table_row("tot", "Indice generale", test_results, test_specs) }}
+                </tbody>
+            </table>
+            {{ table_footer(7) }}
+        </div>
+        {{ page_footer() }}
+    </div>
+{% endblock %}

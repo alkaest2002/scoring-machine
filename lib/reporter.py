@@ -69,11 +69,9 @@ class Reporter:
             The generated PDF report(s) are saved in the `XEROX_PATH` directory:
             - If `split_reports` is True:
             Files follow the pattern:
-            `<test_name>-<batch_index>-<report_index>-<global_index>-<subject_id>.pdf`.
-            Example: `test_name-001-002-003-12345.pdf`, where:
-                - `batch_index`: The batch number (padded to 2 digits).
-                - `report_index`: The report's index within the batch (padded to 3 digits).
-                - `global_index`: The global report index across all batches (padded to 4 digits).
+            `<test_name>-<report_index>-<subject_id>.pdf`.
+            Example: `test_name-001001-12345.pdf`, where:
+                - `report_index`: The global report index across all batches.
                 - `subject_id`: A unique identifier for the test subject.
             - If `split_reports` is False:
             Files follow the pattern:
@@ -89,7 +87,7 @@ class Reporter:
         # To accumulate HTML content for combined report if `split_data` is False
         reports: str = ""
 
-        # Define how many reporst per batch
+        # Define how many reports to process per batch
         reports_per_batch = 100
 
         # Create batches of data (PDF generation is heavy)
@@ -99,7 +97,10 @@ class Reporter:
         for batch_index, batch_test_results in enumerate(batches, 1):
 
             # Loop through test results in current batch
-            for report_index, test_results in enumerate(batch_test_results, 1):
+            for batch_report_index, test_results in enumerate(batch_test_results, 1):
+
+                # Define global index
+                report_index = f"{str((batch_index-1) * reports_per_batch + batch_report_index).zfill(4)}"
             
                 # Render the HTML template with test specifications, test results, and assessment date
                 rendered_template: str = self.report_template.render(
@@ -110,7 +111,7 @@ class Reporter:
 
                 if split_reports:
                     # Generate individual PDF report for each test result
-                    output_filepath: Path = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(2)}{str(report_index).zfill(3)}{str((batch_index-1) * reports_per_batch + report_index).zfill(4)}-{test_results['subject_id']}.pdf"
+                    output_filepath: Path = XEROX_PATH / f"{self.test_name}-{report_index}-{test_results['subject_id']}.pdf"
                     
                     # Persist the rendered HTML as a PDF file
                     HTML(string=rendered_template).write_pdf(output_filepath)

@@ -51,7 +51,7 @@ def process(args: argparse.Namespace) -> None:
             data_container.persist(type=args.output_type)
         else:
             # Generate PDF report(s)
-            Reporter(data_container).render_report(
+            Reporter(data_container).generate_report(
                 assessment_date=args.assessment_date, 
                 split_reports=args.split_reports
             )

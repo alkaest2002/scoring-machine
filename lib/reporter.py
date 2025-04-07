@@ -1,6 +1,6 @@
 from pathlib import Path
+from itertools import batched
 from jinja2 import FileSystemLoader, Environment
-import test
 from weasyprint import HTML
 from lib import TESTS_PATH, XEROX_PATH
 from lib.data_container import DataContainer
@@ -38,58 +38,91 @@ class Reporter:
         # Store the specified HTML template for the report via Jinja2
         self.report_template = jinja_env.get_template(str(Path(self.test_name) / f"{self.report_name}.html"))
 
-    def render_report(self, assessment_date: str, split_reports: bool) -> None:
+    
+    def generate_report(self, assessment_date: str, split_reports: bool) -> None:
         """
-        Generates PDF reports by rendering HTML templates with provided data and saves the output.
+        Generates PDF reports by rendering HTML templates with the provided data and saves them as files.
 
-        This method can generate:
-        1. Individual PDF reports for each set of test results if `split_data` is True.
-        2. A single consolidated PDF report with all test results if `split_data` is False.
+        This method supports:
+        1. Generating individual PDF reports for each test result if `split_reports` is True.
+        2. Generating batched consolidated PDF reports if `split_reports` is False, to improve 
+        performance and handle data in manageable chunks.
 
         Process:
-        1. Iterates through test results to render HTML content for the reports.
-        2. Converts the rendered HTML content to PDF format.
-        3. Saves the generated file(s) to the `XEROX_PATH` directory.
+        1. Splits the test results into batches to optimize PDF generation.
+        - Each batch contains a predefined number of test results (`reports_per_batch`).
+        2. Iterates through each batch and processes the test results within it.
+        - For `split_reports=True`, generates a separate PDF file for each test result.
+        - For `split_reports=False`, accumulates all rendered HTML into a combined report for the batch.
+        3. Converts the rendered HTML content to PDF format.
+        4. Saves the generated PDF files to the `XEROX_PATH` directory.
 
         Args:
-            assessment_date (str): The date of the assessment to be included in the report.
-            split_data (bool): Whether to generate separate PDF reports (True) or a single, 
-                            consolidated report (False).
+            assessment_date (str): The date of the assessment to include in the report.
+            split_reports (bool): 
+                - True: Generates a separate PDF report for each test result, with a detailed naming pattern 
+                        that includes batch and report-specific details.
+                - False: Groups test results into batches for combined PDF reports, with each file 
+                        containing reports of a single batch.
 
-        Output:
+        File Output:
             The generated PDF report(s) are saved in the `XEROX_PATH` directory:
-            - If `split_data` is True: Files follow the pattern: 
-            `<test_name>_<subject_id>_<index>_report.pdf`.
-            - If `split_data` is False: File follows the pattern: 
-            `<test_name>_report.pdf`.
+            - If `split_reports` is True:
+            Files follow the pattern:
+            `<test_name>-<batch_index>-<report_index>-<global_index>-<subject_id>.pdf`.
+            Example: `test_name-001-002-003-12345.pdf`, where:
+                - `batch_index`: The batch number (padded to 2 digits).
+                - `report_index`: The report's index within the batch (padded to 3 digits).
+                - `global_index`: The global report index across all batches (padded to 4 digits).
+                - `subject_id`: A unique identifier for the test subject.
+            - If `split_reports` is False:
+            Files follow the pattern:
+            `<test_name>-<batch_index>.pdf`.
+            Example: `test_name-001.pdf`, where:
+                - `batch_index`: The batch number (padded to 3 digits).
+
+        Notes:
+            - The `reports_per_batch` variable defines how many test results are processed in a single batch. 
+            Batch processing improves the performance of the PDF generation process, especially when working 
+            with large datasets or computationally intensive tasks.
         """
-        reports: str = ""  # To accumulate HTML content for combined report if `split_data` is False
+        # To accumulate HTML content for combined report if `split_data` is False
+        reports: str = ""
 
-        # Loop through all test results to render files
-        for index, test_results in enumerate(self.test_results, 1):
+        # Define how many reporst per batch
+        reports_per_batch = 100
+
+        # Create batches of data (PDF generation is heavy)
+        batches = batched(self.test_results, n=reports_per_batch)
+
+        # Loop through all bateches
+        for batch_index, batch_test_results in enumerate(batches, 1):
+
+            # Loop through test results in current batch
+            for report_index, test_results in enumerate(batch_test_results, 1):
             
-            # Render the HTML template with test specifications, results, and assessment date
-            rendered_template: str = self.report_template.render(
-                test_specs=self.test_specs,  # Specifications of the test
-                test_results=test_results,  # Current set of test results
-                assessment_date=assessment_date  # The provided assessment date
-            )
+                # Render the HTML template with test specifications, test results, and assessment date
+                rendered_template: str = self.report_template.render(
+                    test_specs=self.test_specs,  # Specifications of the test
+                    test_results=test_results,  # Current set of test results
+                    assessment_date=assessment_date  # The provided assessment date
+                )
 
-            if split_reports:
-                # Generate individual PDF report for each test result
-                output_filepath: Path = XEROX_PATH / f"{self.test_name}_report_{str(index).zfill(3)}_{test_results['subject_id']}.pdf"
-                
-                # Persist the rendered HTML as a PDF file
-                HTML(string=rendered_template).write_pdf(output_filepath)
-            else:
-                # Append the rendered HTML content for consolidation
-                reports += rendered_template
+                if split_reports:
+                    # Generate individual PDF report for each test result
+                    output_filepath: Path = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(2)}-{str(report_index).zfill(3)}-{str((batch_index-1) * reports_per_batch + report_index).zfill(4)}-{test_results['subject_id']}.pdf"
+                    
+                    # Persist the rendered HTML as a PDF file
+                    HTML(string=rendered_template).write_pdf(output_filepath)
+                else:
+                    # Append the rendered HTML content for consolidation
+                    reports += rendered_template
 
-        if not split_reports:
-            # Save the combined report as a single PDF
-            output_filepath: Path = XEROX_PATH / f"{self.test_name}_report.pdf"
+            if not split_reports:
+                # Save the combined report as a single PDF
+                output_filepath: Path = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(3)}.pdf"
 
-            # Persist the combined HTML content as a single PDF file
-            HTML(string=reports).write_pdf(output_filepath)
+                # Persist the combined HTML content as a single PDF file
+                HTML(string=reports).write_pdf(output_filepath)
 
             

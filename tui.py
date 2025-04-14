@@ -13,17 +13,13 @@ class MyApp(App):
     Screen {
         align: center middle;
     }
-
-    Static {
-        text-align: center;
-    }
     """
 
     SCREENS = {
-        "splash": SplashScreen,
-        "file": FileScreen,  
-        "score": ScoringScreen,
-        "end": EndScreen,
+        "splashScreen": SplashScreen,
+        "fileScreen": FileScreen,  
+        "scoreScreen": ScoringScreen,
+        "endScreen": EndScreen,
     }
 
     BINDINGS = [
@@ -35,23 +31,21 @@ class MyApp(App):
         "files": []
     })
 
-    screens_cycle = reactive[dict[str, dict[str, str]]]({
-        "SplashScreen()":  { "left": "splash", "right": "file" },
-        "FileScreen()":    { "left": "splash", "right": "score" },
-        "ScoringScreen()": { "left": "file",   "right": "end" },
-        "EndScreen()":     { "left": "score",  "right": "end" },
+    screens_cycle = reactive[dict[str, dict[str, str | None]]]({
+        "splashScreen": { "left": None, "right": "fileScreen" },
+        "fileScreen":   { "left": "splashScreen", "right": "scoreScreen" },
+        "scoreScreen":  { "left": "fileScreen",   "right": "endScreen" },
+        "endScreen":    { "left": "scoreScreen",  "right": None },
     })
 
-    def watch_screen(self):
-        print("ciao")
-
     def on_mount(self) -> None:
-        self.push_screen("splash")
+        self.push_screen("splashScreen")
 
     def action_change_screen(self, key: str) -> None:
         current_screen_navigation = self.screens_cycle.get(self.screen.__repr__())
-        screen_to_switch_to = current_screen_navigation[key] # type: ignore
-        self.switch_screen(screen_to_switch_to)
+        screen_to_change_to = current_screen_navigation[key] # type: ignore
+        if screen_to_change_to:
+            self.switch_screen(screen_to_change_to)
 
 if __name__ == "__main__":
     app = MyApp()

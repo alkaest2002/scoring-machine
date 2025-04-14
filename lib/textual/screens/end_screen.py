@@ -5,6 +5,9 @@ from textual.widgets import Static, Button
 
 class EndScreen(Screen):
 
+    def __repr__(self) -> str:
+        return "endScreen"
+
     def compose(self) -> ComposeResult:
         yield Static("Fine")
         yield Button("esci")

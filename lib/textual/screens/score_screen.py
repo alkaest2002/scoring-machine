@@ -4,5 +4,8 @@ from textual.widgets import Static
 
 class ScoringScreen(Screen):
 
+    def __repr__(self) -> str:
+        return "scoreScreen"
+
     def compose(self) -> ComposeResult:
         yield Static("Scoring Screen")

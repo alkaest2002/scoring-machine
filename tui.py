@@ -1,11 +1,8 @@
-from multiprocessing.spawn import old_main_modules
-import pandas as pd
 from typing import Any
 from textual.app import App
-from textual.events import Key
 from textual.reactive import reactive
 from lib.textual.screens.splash_screen import SplashScreen
-from lib.textual.screens.file_screen import FileScreen
+from lib.textual.screens.file_screen import FileScreen, CSVTree
 from lib.textual.screens.score_screen import ScoringScreen
 from lib.textual.screens.end_screen import EndScreen
 
@@ -52,6 +49,10 @@ class MyApp(App):
         new_screen_index = old_screen_index + offset
         new_screen_index = max(0, min(self.number_of_screens -1, new_screen_index))
         self.current_screen = self.screens_list[new_screen_index]
+
+    def on_directory_tree_file_selected(self, event: CSVTree.FileSelected) -> None:
+        self.store["files"] = event.path.name
+        print("XYXYXYXYXYXYXY", self.store["files"])
 
 if __name__ == "__main__":
     app = MyApp()

@@ -14,6 +14,7 @@ class MyApp(App):
     CSS = """
     Screen {
         align: center middle;
+        padding: 1;
     }
     """
 

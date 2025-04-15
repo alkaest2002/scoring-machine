@@ -1,3 +1,5 @@
+from multiprocessing.spawn import old_main_modules
+import pandas as pd
 from typing import Any
 from textual.app import App
 from textual.events import Key
@@ -23,29 +25,32 @@ class MyApp(App):
     }
 
     BINDINGS = [
-        ("left", "change_screen('left')", "move to previous screen"),
-        ("right", "change_screen('right')", "move to next screen"),
+        ("left", "change_screen(-1)", "move to previous screen"),
+        ("right", "change_screen(1)", "move to next screen"),
     ]
 
     store = reactive[dict[str, Any]]({
         "files": []
     })
 
-    screens_cycle = reactive[dict[str, dict[str, str | None]]]({
-        "splashScreen": { "left": None, "right": "fileScreen" },
-        "fileScreen":   { "left": "splashScreen", "right": "scoreScreen" },
-        "scoreScreen":  { "left": "fileScreen",   "right": "endScreen" },
-        "endScreen":    { "left": "scoreScreen",  "right": None },
-    })
+    current_screen = reactive("splashScreen")
+
+    def __init__(self):
+        self.screens_list = list(self.SCREENS.keys())
+        self.number_of_screens = len(self.screens_list)
+        super().__init__()
+
+    def watch_current_screen(self, new_screen: str) -> None:
+        self.switch_screen(new_screen)
 
     def on_mount(self) -> None:
         self.push_screen("splashScreen")
 
-    def action_change_screen(self, key: str) -> None:
-        current_screen_navigation = self.screens_cycle.get(self.screen.__repr__())
-        screen_to_change_to = current_screen_navigation[key] # type: ignore
-        if screen_to_change_to:
-            self.switch_screen(screen_to_change_to)
+    def action_change_screen(self, offset: int) -> None:
+        old_screen_index = self.screens_list.index(self.screen.__repr__())
+        new_screen_index = old_screen_index + offset
+        new_screen_index = max(0, min(self.number_of_screens -1, new_screen_index))
+        self.current_screen = self.screens_list[new_screen_index]
 
 if __name__ == "__main__":
     app = MyApp()

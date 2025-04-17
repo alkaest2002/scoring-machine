@@ -21,8 +21,14 @@ Markdown syntax and extensions are supported.
 class SplashScreen(Screen):
 
     CSS = """
-    Screen {
-        background: blue;
+    
+    Markdown {
+        background: transparent;
+        padding: 0;
+    }
+
+    MarkdownH1 {
+        content-align: left middle;
     }
 """
 

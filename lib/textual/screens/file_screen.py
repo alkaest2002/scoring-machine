@@ -14,26 +14,25 @@ class FileScreen(Screen):
         
     CSS = """
 
-    FileScreen > * {
-        margin: 1;
-    }
-
     CSVTree {
         height: auto;
-        padding: 2;
-        background: rgb(18,18,18);
+        background: transparent;
     }
 
-    SelectedFile {
+    #selected_file_group {
+    
         height: 1;
-    }
+        margin-bottom: 1;
 
-    HorizontalGroup > Label  {
-        margin-right: 1
+        #selected_file {
+            background: red;
+            color: white;
+            padding-left: 1;
+            align: left middle;
+        }
     }
-
 """
-    selected_file = reactive("", layout=True)
+    selected_file = reactive("nessuno", layout=True)
 
     def __repr__(self) -> str:
         return "fileScreen"
@@ -41,17 +40,16 @@ class FileScreen(Screen):
     def on_mount(self) -> None:
         self.CSVTree.show_root = False # type: ignore
         
-    
     def watch_selected_file(self, selected_file: str):
         self.query_one("#selected_file", Static).update(selected_file)
     
     def on_directory_tree_file_selected(self, event: CSVTree.FileSelected) -> None:
-        print(self.CSVTree.FileSelected.handler_name)
         self.selected_file = event.path.name
+        self.query_one("#selected_file").styles.background = "green"
 
     def compose(self) -> ComposeResult:
         yield Label("Scegli il file contenente i dati dei test da siglare e premi <invio>")
-        with HorizontalGroup():
-            yield Label("File selezionato:")
+        with HorizontalGroup(id="selected_file_group"):
+            yield Label("File selezionato ---> ", id="selected_file_label")
             yield Static(id="selected_file")
         yield self.CSVTree("./data")

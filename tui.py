@@ -1,4 +1,6 @@
+import os
 from typing import Any
+from textual import on
 from textual.app import App
 from textual.reactive import reactive
 from lib.textual.screens.splash_screen import SplashScreen
@@ -10,9 +12,15 @@ class MyApp(App):
 
     CSS = """
     Screen {
-        align: center top;
-        padding: 1;
+        padding: 0 2 1 2;
+        align: left top;
+        background: transparent
     }
+
+    Screen > Label:first-of-type {
+        margin: 2 0 1 0;
+    }
+
     """
 
     SCREENS = {
@@ -33,6 +41,10 @@ class MyApp(App):
 
     current_screen = reactive("splashScreen")
 
+    condition_to_switch_screen = reactive[dict[str, bool]]({
+        "scoreScreen": False
+    })
+
     def __init__(self):
         self.screens_list = list(self.SCREENS.keys())
         self.number_of_screens = len(self.screens_list)
@@ -48,11 +60,14 @@ class MyApp(App):
         old_screen_index = self.screens_list.index(self.screen.__repr__())
         new_screen_index = old_screen_index + offset
         new_screen_index = max(0, min(self.number_of_screens -1, new_screen_index))
-        self.current_screen = self.screens_list[new_screen_index]
+        new_screen = self.screens_list[new_screen_index]
+        if self.condition_to_switch_screen.get(new_screen, True):
+            self.current_screen = new_screen
 
-    def on_directory_tree_file_selected(self, event: FileScreen.CSVTree.FileSelected) -> None:
-        self.store["files"] = event.path.name
-        print("XYXYXYXYXYXYXY", self.store["files"])
+    @on(FileScreen.CSVTree.FileSelected)
+    def on_file_selected(self, event: FileScreen.CSVTree.FileSelected) -> None:
+        self.store["files"] = event.path.relative_to(os.getcwd())
+        self.condition_to_switch_screen["scoreScreen"] = True
 
 if __name__ == "__main__":
     app = MyApp()

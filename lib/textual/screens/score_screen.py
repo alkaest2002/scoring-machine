@@ -1,6 +1,6 @@
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import Label
 
 class ScoringScreen(Screen):
 
@@ -8,4 +8,4 @@ class ScoringScreen(Screen):
         return "scoreScreen"
 
     def compose(self) -> ComposeResult:
-        yield Static("Scoring Screen")
+        yield Label(f"Scoring file --> {self.app.store["files"]}") # type: ignore

@@ -25,8 +25,7 @@ class FileScreen(Screen):
         margin-bottom: 1;
 
         #selected_file {
-            background: red;
-            color: white;
+            color: red;
             padding-left: 1;
             align: left middle;
         }
@@ -45,7 +44,7 @@ class FileScreen(Screen):
     
     def on_directory_tree_file_selected(self, event: CSVTree.FileSelected) -> None:
         self.selected_file = event.path.name
-        self.query_one("#selected_file").styles.background = "green"
+        self.query_one("#selected_file").styles.color = "green"
 
     def compose(self) -> ComposeResult:
         yield Label("Scegli il file contenente i dati dei test da siglare e premi <invio>")

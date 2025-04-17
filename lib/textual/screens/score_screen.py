@@ -8,4 +8,7 @@ class ScoringScreen(Screen):
         return "scoreScreen"
 
     def compose(self) -> ComposeResult:
-        yield Label(f"Scoring file --> {self.app.store["files"]}") # type: ignore
+        yield Label(f"Scoring file --> {self.app.selected_file_path}") # type: ignore
+
+    def on_screen_resume(self) -> None:
+        self.query_one("Label").update(f"Scoring file --> {self.app.selected_file_path}") # type: ignore

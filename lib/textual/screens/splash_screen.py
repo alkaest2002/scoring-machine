@@ -3,37 +3,38 @@ from textual.screen import Screen
 from textual.widgets import Markdown
 
 md ="""
-# Markdown Document
+# THE SCORING MACHINE PROJECT
 
-This is an example of Textual's `Markdown` widget.
+Applicativo per la siglatura di questionari psicologici.
 
-## Features
+## Cosa dovrai fare
 
-Markdown syntax and extensions are supported.
+- Selezionare il file CSV contenente i dati da siglare.
+- Scegliere il questionario/test di riferimento.
+- Avviare la siglatura dei dati.
+- Generare ed esportare i report.
 
-- Typography *emphasis*, **strong**, `inline code` etc.
-- Headers
-- Lists (bullet and ordered)
-- Syntax highlighted code blocks
-- Tables!
+Premi la freccia < destra > per andare avanti.
 """
 
 class SplashScreen(Screen):
 
+    def __repr__(self) -> str:
+        return "splashScreen"
+
     CSS = """
-    
     Markdown {
         background: transparent;
+        margin: 0;
         padding: 0;
     }
 
     MarkdownH1 {
         content-align: left middle;
+        margin: 0;
+        padding: 0;
     }
 """
-
-    def __repr__(self) -> str:
-        return "splashScreen"
 
     def compose(self) -> ComposeResult:
         yield Markdown(md)

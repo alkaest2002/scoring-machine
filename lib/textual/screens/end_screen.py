@@ -1,9 +1,11 @@
-from textual import on
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Label, Button
 
 class EndScreen(Screen):
+
+    def __repr__(self) -> str:
+        return "endScreen"
 
     CSS = """
     Label {
@@ -17,13 +19,9 @@ class EndScreen(Screen):
 
 """
 
-    def __repr__(self) -> str:
-        return "endScreen"
-
     def compose(self) -> ComposeResult:
         yield Label("Fine")
         yield Button("esci", variant="primary")
 
-    @on(Button.Pressed)
-    def exit_from_app(self):
+    def on_button_pressed(self):
         self.app.exit()

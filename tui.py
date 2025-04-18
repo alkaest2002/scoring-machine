@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Any
 from textual import on
 from textual.app import App
 from textual.reactive import reactive
@@ -13,15 +12,10 @@ class MyApp(App):
 
     CSS = """
     Screen {
-        padding: 0 2 1 2;
+        padding: 1 2 1 2;
         align: left top;
         background: transparent
     }
-
-    Screen > Label:first-of-type {
-        margin: 2 0 1 0;
-    }
-
     """
 
     SCREENS = {
@@ -36,11 +30,13 @@ class MyApp(App):
         ("right", "change_screen(1)", "move to next screen"),
     ]
 
-    selected_file_path = reactive[Path|None](None)
+    current_job: reactive[dict] = reactive({
+        "selected_file_path": None,
+    })
 
-    current_screen = reactive("splashScreen")
+    current_screen : reactive[str] = reactive("splashScreen")
 
-    condition_to_switch_screen = reactive[dict[str, bool]]({
+    condition_to_switch_screen: reactive[dict[str, bool]] = reactive({
         "scoreScreen": False
     })
 
@@ -65,8 +61,8 @@ class MyApp(App):
 
     @on(FileScreen.CSVTree.FileSelected)
     def on_file_selected(self, event: FileScreen.CSVTree.FileSelected) -> None:
-        selected_file_path =  event.path.relative_to(os.getcwd())
-        self.selected_file_path = selected_file_path
+        data_folder_path = Path(os.getcwd()) / "data"
+        self.current_job["selected_file_path"] = event.path.relative_to(str(data_folder_path))
         self.condition_to_switch_screen["scoreScreen"] = True
 
 if __name__ == "__main__":

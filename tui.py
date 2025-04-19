@@ -49,6 +49,7 @@ class MyApp(App):
         self.switch_screen(new_screen)
 
     def on_mount(self) -> None:
+        self.theme = "gruvbox"
         self.push_screen("splashScreen")
 
     def action_change_screen(self, offset: int) -> None:

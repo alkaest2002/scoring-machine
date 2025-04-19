@@ -13,7 +13,9 @@ class FileScreen(Screen):
 
     class CSVTree(DirectoryTree):
         def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-            return [path for path in paths if path.suffix.__eq__(".csv") or path.is_dir()]
+            condition1 = lambda x: x.suffix.__eq__(".csv")
+            condition2 = lambda x: x.is_dir() and x.name[0] != "."
+            return [path for path in paths if any([condition1(path), condition2(path)])]
         
     CSS = """
     CSVTree {

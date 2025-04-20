@@ -3,7 +3,7 @@ from typing import Iterable
 from textual.reactive import reactive
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Label, DirectoryTree, Static
+from textual.widgets import Label, DirectoryTree, Static, Footer
 from textual.containers import HorizontalGroup
 
 class FileScreen(Screen):
@@ -35,7 +35,11 @@ class FileScreen(Screen):
         }
     }
 """
-    
+    BINDINGS = [
+        ("<", "change_screen(-1)", "prec."),
+        (">", "change_screen(1)", "succ"),
+    ]
+
     current_path: reactive[str] = reactive[str]("nessuno", layout=True)
 
     def on_mount(self) -> None:
@@ -51,8 +55,9 @@ class FileScreen(Screen):
         self.current_path = current_path.name if current_path.is_file() else "nessuno"
 
     def compose(self) -> ComposeResult:
-        yield Static("Seleziona il file CSV da siglare e premi <invio>")
+        yield Static("Seleziona il file CSV da siglare")
         with HorizontalGroup(id="current_path_group"):
             yield Label("File selezionato ---> ")
             yield Static(id="current_path")
         yield self.CSVTree(str(Path("./data")))
+        yield Footer(show_command_palette=False)

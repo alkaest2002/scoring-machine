@@ -1,5 +1,3 @@
-import os
-from pathlib import Path
 from textual import on
 from textual.app import App
 from textual.reactive import reactive
@@ -26,8 +24,8 @@ class MyApp(App):
     }
 
     BINDINGS = [
-        ("left", "change_screen(-1)", "move to previous screen"),
-        ("right", "change_screen(1)", "move to next screen"),
+        ("left", "app.change_screen(-1)", "move to previous screen"),
+        ("right", "app.change_screen(1)", "move to next screen"),
     ]
 
     current_job: reactive[dict] = reactive({
@@ -63,8 +61,9 @@ class MyApp(App):
     @on(FileScreen.CSVTree.NodeHighlighted)
     def on_file_screen_node_highlighted(self, event: FileScreen.CSVTree.NodeHighlighted) -> None:
         selected_path = event.node.data.path # type: ignore
-        self.condition_to_switch_screen["scoreScreen"] = selected_path.is_file()
-        self.current_job["selected_path"] = selected_path if selected_path.is_file() else None
+        selected_path_is_file = selected_path.is_file()
+        self.condition_to_switch_screen["scoreScreen"] = selected_path_is_file
+        self.current_job["selected_path"] = selected_path if selected_path_is_file else None
         
 
 if __name__ == "__main__":

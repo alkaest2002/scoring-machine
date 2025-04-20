@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Label, Static, DataTable, Rule
+from textual.widgets import Label, Static, DataTable, Rule, Footer
 from textual.containers import HorizontalGroup
 
 class ScoringScreen(Screen):
@@ -17,13 +17,17 @@ class ScoringScreen(Screen):
         margin-bottom: 1;
     }
 
-    #selected_file_group {
+    #selected_path_group {
 
-        #selected_file {
+        #selected_path {
             color: green;
             padding-left: 1;
             align: left middle;
         }
+    }
+
+    Rule {
+        color: #fff;
     }
 
     DataTable {
@@ -35,29 +39,33 @@ class ScoringScreen(Screen):
         }
     }
 """
+
+    BINDINGS = [
+        ("<", "change_screen(-1)", "prec."),
+        (">", "change_screen(1)", "succ"),
+    ]
     
     def compose(self) -> ComposeResult:
-        with HorizontalGroup(id="selected_file_group"):
+        with HorizontalGroup(id="selected_path_group"):
             yield Label("File selezionato ---> ")
-            yield Static(id="selected_file")
+            yield Static(id="selected_path")
         with HorizontalGroup(id="count_group"):
             yield Label("Dati di processare ---> ")
             yield Static(id="count")
-        yield Rule(line_style="double")
+        yield Rule(line_style="solid")
         yield DataTable()
+        yield Footer(show_command_palette=False)
 
     def on_mount(self) -> None:
         data_table = self.query_one(DataTable)
-        data_table.cursor_type = 'row'
         data_table.header_height = 2
         data_table.show_cursor = False
-        data_table.zebra_stripes = True
 
     def on_screen_resume(self) -> None:
         
         # Refresh selected file
         file_to_score_path = self.app.current_job["selected_path"] # type: ignore
-        self.query_one("#selected_file").update(str(file_to_score_path)) # type: ignore
+        self.query_one("#selected_path").update(file_to_score_path.name) # type: ignore
         
         # Open file
         try:

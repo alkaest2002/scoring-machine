@@ -23,12 +23,12 @@ class FileScreen(Screen):
         background: transparent;
     }
 
-    #selected_file_group {
+    #current_path_group {
     
         height: 1;
         margin: 1 0;
 
-        #selected_file {
+        #current_path {
             color: red;
             padding-left: 1;
             align: left middle;
@@ -36,21 +36,23 @@ class FileScreen(Screen):
     }
 """
     
-    selected_file: reactive[str] = reactive[str]("nessuno", layout=True)
+    current_path: reactive[str] = reactive[str]("nessuno", layout=True)
 
     def on_mount(self) -> None:
         self.CSVTree.show_root = False # type: ignore
         
-    def watch_selected_file(self, selected_file: str):
-        self.query_one("#selected_file", Static).update(selected_file)
-    
-    def on_directory_tree_file_selected(self, event: CSVTree.FileSelected) -> None:
-        self.selected_file = event.path.name
-        self.query_one("#selected_file").styles.color = "green"
+    def watch_current_path(self, current_path: str):
+        element = self.query_one("#current_path", Static)
+        element.update(current_path)
+        element.styles.color = "red" if current_path == "nessuno" else "green"
+
+    def on_tree_node_highlighted(self, event) -> None:
+        current_path = event.node.data.path
+        self.current_path = current_path.name if current_path.is_file() else "nessuno"
 
     def compose(self) -> ComposeResult:
-        yield Static("Scegli il file CSV contenente i dati dei questionari/test da siglare e premi < invio >")
-        with HorizontalGroup(id="selected_file_group"):
+        yield Static("Seleziona il file CSV da siglare e premi <invio>")
+        with HorizontalGroup(id="current_path_group"):
             yield Label("File selezionato ---> ")
-            yield Static(id="selected_file")
+            yield Static(id="current_path")
         yield self.CSVTree(str(Path("./data")))

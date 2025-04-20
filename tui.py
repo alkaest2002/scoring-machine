@@ -31,7 +31,7 @@ class MyApp(App):
     ]
 
     current_job: reactive[dict] = reactive({
-        "selected_file_path": None,
+        "selected_path": None,
     })
 
     current_screen : reactive[str] = reactive("splashScreen")
@@ -60,11 +60,12 @@ class MyApp(App):
         if self.condition_to_switch_screen.get(new_screen, True):
             self.current_screen = new_screen
 
-    @on(FileScreen.CSVTree.FileSelected)
-    def on_file_selected(self, event: FileScreen.CSVTree.FileSelected) -> None:
-        data_folder_path = Path(os.getcwd()) / "data"
-        self.current_job["selected_file_path"] = event.path.relative_to(str(data_folder_path))
-        self.condition_to_switch_screen["scoreScreen"] = True
+    @on(FileScreen.CSVTree.NodeHighlighted)
+    def on_file_screen_node_highlighted(self, event: FileScreen.CSVTree.NodeHighlighted) -> None:
+        selected_path = event.node.data.path # type: ignore
+        self.condition_to_switch_screen["scoreScreen"] = selected_path.is_file()
+        self.current_job["selected_path"] = selected_path if selected_path.is_file() else None
+        
 
 if __name__ == "__main__":
     app = MyApp()

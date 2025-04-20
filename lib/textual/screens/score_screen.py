@@ -56,7 +56,7 @@ class ScoringScreen(Screen):
     def on_screen_resume(self) -> None:
         
         # Refresh selected file
-        file_to_score_path = self.app.current_job["selected_file_path"] # type: ignore
+        file_to_score_path = self.app.current_job["selected_path"] # type: ignore
         self.query_one("#selected_file").update(str(file_to_score_path)) # type: ignore
         
         # Open file

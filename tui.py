@@ -1,3 +1,4 @@
+import pandas as pd
 from textual import on
 from textual.app import App
 from textual.reactive import reactive
@@ -30,6 +31,7 @@ class MyApp(App):
 
     current_job: reactive[dict] = reactive({
         "selected_path": None,
+        "df": None
     })
 
     current_screen : reactive[str] = reactive("splashScreen")
@@ -64,8 +66,8 @@ class MyApp(App):
         selected_path_is_file = selected_path.is_file()
         self.condition_to_switch_screen["scoreScreen"] = selected_path_is_file
         self.current_job["selected_path"] = selected_path if selected_path_is_file else None
+        self.current_job["df"] = pd.read_csv(selected_path) if selected_path_is_file else None
         
-
 if __name__ == "__main__":
     app = MyApp()
     app.run()

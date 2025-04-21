@@ -51,11 +51,10 @@ class ScoringScreen(Screen):
         yield Footer(show_command_palette=False)
 
     def get_selected_path_label(self, df: pd.DataFrame) -> str:
-        return f"{self.app.current_job['selected_path'].name} ({min(1000, df.shape[0])} righe)" # type: ignore
-    
-    def load_df(self) -> pd.DataFrame:
-        file_to_score_path = Path("./data/") / self.app.current_job["selected_path"] # type: ignore
-        return pd.read_csv(file_to_score_path)
+        selected_path = self.app.current_job["selected_path"] # type: ignore
+        df = self.app.current_job["df"] # type: ignore
+        return f"{selected_path.name} ({min(1000, df.shape[0])} righe)" # type: ignore
+
 
     def on_mount(self) -> None:
         data_table = self.query_one(DataTable)
@@ -63,7 +62,7 @@ class ScoringScreen(Screen):
         data_table.show_cursor = False
  
     def on_screen_resume(self) -> None:
-        df = self.load_df()
+        df = self.app.current_job["df"] # type: ignore
         self.query_one("#selected_path").update(self.get_selected_path_label(df)) # type: ignore
         try:
             empty_placeholder = "-"

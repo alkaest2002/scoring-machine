@@ -28,10 +28,6 @@ class ScoringScreen(Screen):
         }
     }
 
-    Rule {
-        color: #fbf1c7;
-    }
-
     DataTable {
         background: transparent;
 
@@ -48,9 +44,9 @@ class ScoringScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with HorizontalGroup(id="selected_path_group"):
-            yield Label("File selezionato ---> ")
+            yield Label("File selezionato:")
             yield Static(id="selected_path")
-        yield Rule(line_style="solid")
+        yield Rule(line_style="dashed")
         yield DataTable()
         yield Footer(show_command_palette=False)
 

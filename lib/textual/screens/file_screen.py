@@ -3,7 +3,7 @@ from typing import Iterable
 from textual.reactive import reactive
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Label, DirectoryTree, Static, Footer
+from textual.widgets import Label, DirectoryTree, Static, Footer, Rule
 from textual.containers import HorizontalGroup
 
 class FileScreen(Screen):
@@ -23,10 +23,11 @@ class FileScreen(Screen):
         background: transparent;
     }
 
+    HorizontalGroup {
+        margin-bottom: 1;
+    }
+
     #current_path_group {
-    
-        height: 1;
-        margin: 1 0;
 
         #current_path {
             color: red;
@@ -48,16 +49,16 @@ class FileScreen(Screen):
     def watch_current_path(self, current_path: str):
         element = self.query_one("#current_path", Static)
         element.update(current_path)
-        element.styles.color = "red" if current_path == "nessuno" else "green"
+        element.styles.color = "#fb4934" if current_path == "nessuno" else "#03AC13"
 
     def on_tree_node_highlighted(self, event) -> None:
         current_path = event.node.data.path
         self.current_path = current_path.name if current_path.is_file() else "nessuno"
 
     def compose(self) -> ComposeResult:
-        yield Static("Seleziona il file CSV da siglare")
         with HorizontalGroup(id="current_path_group"):
-            yield Label("File selezionato ---> ")
+            yield Label("Seleziona il file CSV da siglare:")
             yield Static(id="current_path")
+        yield Rule(line_style="dashed")
         yield self.CSVTree(str(Path("./data")))
         yield Footer(show_command_palette=False)

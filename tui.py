@@ -11,7 +11,7 @@ class MyApp(App):
 
     CSS = """
     Screen {
-        padding: 1 2 1 2;
+        padding: 1 2;
         align: left top;
         background: transparent
     }
@@ -60,13 +60,16 @@ class MyApp(App):
         if self.condition_to_switch_screen.get(new_screen, True):
             self.current_screen = new_screen
 
+    async def load_df(self) -> None:
+        self.current_job["df"] = pd.read_csv(self.current_job["selected_path"], nrows=1000)
+
     @on(FileScreen.CSVTree.NodeHighlighted)
-    def on_file_screen_node_highlighted(self, event: FileScreen.CSVTree.NodeHighlighted) -> None:
+    async def on_file_screen_node_highlighted(self, event: FileScreen.CSVTree.NodeHighlighted) -> None:
         selected_path = event.node.data.path # type: ignore
-        selected_path_is_file = selected_path.is_file()
-        self.condition_to_switch_screen["scoreScreen"] = selected_path_is_file
-        self.current_job["selected_path"] = selected_path if selected_path_is_file else None
-        self.current_job["df"] = pd.read_csv(selected_path) if selected_path_is_file else None
+        if selected_path.is_file():
+            self.condition_to_switch_screen["scoreScreen"] = True
+            self.current_job["selected_path"] = selected_path
+            self.run_worker(self.load_df, exclusive=True)
         
 if __name__ == "__main__":
     app = MyApp()

@@ -1,10 +1,14 @@
+import csv
+
+from rich.text import Text
 from pathlib import Path
-from typing import Iterable
+from typing import Generator, Iterable
+from textual.widget import Widget
 from textual.reactive import reactive
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Label, DirectoryTree, Static, Footer, Rule
-from textual.containers import HorizontalGroup
+from textual.containers import HorizontalGroup, VerticalGroup
 
 class FileScreen(Screen):
 
@@ -13,21 +17,37 @@ class FileScreen(Screen):
 
     class CSVTree(DirectoryTree):
         def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-            condition1 = lambda x: x.suffix.__eq__(".csv")
-            condition2 = lambda x: x.is_dir() and x.name[0] != "."
-            return [path for path in paths if any([condition1(path), condition2(path)])]
+            filter_condition1 = lambda x: x.suffix.__eq__(".csv")
+            filder_condition2 = lambda x: x.is_dir() and x.name[0] != "."
+            return [path for path in paths if any([filter_condition1(path), filder_condition2(path)])]
         
-    CSS = """
-    CSVTree {
-        height: auto;
-        background: transparent;
-    }
+    class CSVPreview(Widget):
+        data_provider = reactive("...")
 
+        def compose(self) -> ComposeResult:
+            with VerticalGroup():
+                yield Label(Text("Prima riga", style="italic"))
+                yield Static("...", id="data_preview")
+
+        def watch_data_provider(self, newVal: str | Generator) -> None:
+            element = self.query_one("#data_preview")
+            if isinstance(newVal, str):
+                element.update(newVal)  # type: ignore
+            else:
+                element.update(", ".join(next(newVal))) # type: ignore
+               
+    CSS = """
+
+    Screen {
+        layout: vertical;
+    }
+   
     HorizontalGroup {
         margin-bottom: 1;
     }
 
     #current_path_group {
+        height: 1;
 
         #current_path {
             color: red;
@@ -35,30 +55,75 @@ class FileScreen(Screen):
             align: left middle;
         }
     }
+
+    #current_tree_group {
+        height: 1fr;
+        margin-left: 0;
+        padding-left: 0;
+        
+        & > CSVTree {
+            height: 100%;
+            width: 40%;
+            height: auto;
+            border-right: tall $foreground;
+            padding: 1 2;
+            margin-left: 1;
+        }
+
+        CSVPreview > VerticalGroup {
+            width: 60%;
+            padding: 0 1;
+
+            & Label {
+                margin-bottom: 1;
+            }
+        }
+    
+    }
 """
+    
     BINDINGS = [
         ("<", "change_screen(-1)", "prec."),
         (">", "change_screen(1)", "succ"),
     ]
 
-    current_path: reactive[str] = reactive[str]("nessuno", layout=True)
-
-    def on_mount(self) -> None:
-        self.CSVTree.show_root = False # type: ignore
-        
-    def watch_current_path(self, current_path: str):
-        element = self.query_one("#current_path", Static)
-        element.update(current_path)
-        element.styles.color = "#fb4934" if current_path == "nessuno" else "#03AC13"
-
-    def on_tree_node_highlighted(self, event) -> None:
-        current_path = event.node.data.path
-        self.current_path = current_path.name if current_path.is_file() else "nessuno"
+    current_path = reactive[Path](Path("./data"))
+    
+    current_filename = reactive[str]("nessuno", layout=True)
 
     def compose(self) -> ComposeResult:
         with HorizontalGroup(id="current_path_group"):
             yield Label("Seleziona il file CSV da siglare:")
-            yield Static(id="current_path")
+            yield Static("nessuno", id="current_path")
         yield Rule(line_style="dashed")
-        yield self.CSVTree(str(Path("./data")))
-        yield Footer(show_command_palette=False)
+        with HorizontalGroup(id="current_tree_group"):
+            yield self.CSVTree(str(Path("./data")))
+            yield self.CSVPreview(id="data_preview_widget")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        self.CSVTree.show_root = False  # type: ignore
+        
+    def watch_current_filename(self, current_filename: str):
+        current_path_group = self.query_one("#current_path")
+        data_preview = self.query_one("#data_preview_widget")
+        if current_filename != "nessuno":
+            current_path = self.current_path / current_filename
+            with open(current_path) as f:
+                csv_reader = csv.reader(f)
+                rows_count = sum(1 for _ in f)
+                f.seek(0)
+                next(csv_reader)
+                rows_count = min(1000, rows_count)
+                current_path_group.update(f"{current_filename} ({rows_count} righe)") # type: ignore
+                current_path_group.styles.color = "#03AC13"
+                data_preview.data_provider = csv_reader # type: ignore
+        else:
+            current_path_group.update("nessuno") # type: ignore
+            current_path_group.styles.color = "#fb4934"
+            data_preview.data_provider = "..." # type: ignore
+
+    def on_tree_node_highlighted(self, event) -> None:
+        current_path = event.node.data.path
+        self.current_path = current_path.parent
+        self.current_filename = current_path.name if current_path.is_file() else "nessuno"

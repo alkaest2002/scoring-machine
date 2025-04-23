@@ -2,9 +2,9 @@ import re
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Label, Static, Rule, Footer, Input
+from textual.widgets import Label, Static, Rule, Footer, Input, Button
 from textual.containers import HorizontalGroup, VerticalGroup
-
+from textual.events import Key
 class ScoringScreen(Screen):
 
     def __repr__(self) -> str:
@@ -25,13 +25,17 @@ class ScoringScreen(Screen):
         }
     }
 
-    DataTable {
-        background: transparent;
+    VerticalGroup {
+    
+        & > * {
+            margin-bottom: 1;
+        }
 
-        & .datatable--header {
-            background: transparent;
+        Button {
+            margin-left: 1;
         }
     }
+   
 """
 
     def compose(self) -> ComposeResult:
@@ -41,7 +45,15 @@ class ScoringScreen(Screen):
         yield Rule(line_style="dashed")
         with VerticalGroup():
             yield Input(id="test_id")
+            yield Button("avvia siglatura", id="score_button", variant="primary")
         yield Footer(show_command_palette=False)
+
+    def on_input_submitted(self) -> None:
+        score_button = self.query_one("#score_button")
+        self.set_focus(score_button)
+
+    def on_button_pressed(self, event: Button.Pressed):
+        print("------------->", event.handler_name)
 
     def get_current_path_label(self) -> str:
         current_path = self.app.current_job["current_path"] # type: ignore

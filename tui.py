@@ -62,8 +62,8 @@ class MyApp(App):
     def action_change_screen(self, offset: int) -> None:
         old_screen_index = self.screens_list.index(self.screen.__repr__())
         new_screen_index = old_screen_index + offset
-        new_screen_index = max(0, min(self.number_of_screens -1, new_screen_index))
-        new_screen = self.screens_list[new_screen_index]
+        capped_new_screen_index = max(0, min(self.number_of_screens -1, new_screen_index))
+        new_screen = self.screens_list[capped_new_screen_index]
         if self.condition_to_switch_screen.get(new_screen, True):
             self.current_screen = new_screen
 

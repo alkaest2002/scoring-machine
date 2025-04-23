@@ -34,7 +34,8 @@ class FileScreen(Screen):
             if isinstance(newVal, str):
                 element.update(newVal)  # type: ignore
             else:
-                element.update(", ".join(next(newVal))) # type: ignore
+                first_row = [ f"{k}: {v}" for k, v in zip(next(newVal), next(newVal)) ]
+                element.update(", ".join(first_row)) # type: ignore
                
     CSS = """
 
@@ -42,11 +43,9 @@ class FileScreen(Screen):
         layout: vertical;
     }
    
-    HorizontalGroup {
-        margin-bottom: 1;
-    }
-
     #current_path_group {
+        
+        margin-bottom: 1;
         height: 1;
 
         #current_path {
@@ -57,28 +56,28 @@ class FileScreen(Screen):
     }
 
     #current_tree_group {
-        height: 1fr;
-        margin-left: 0;
-        padding-left: 0;
         
-        & > CSVTree {
-            height: 100%;
+        height: 1fr;
+        margin-bottom: 1;
+        padding-left: 0;
+        layout: horizontal;
+
+        & #left_pane {
             width: 40%;
             height: auto;
+            background: $panel;
+            margin-right: 1;
             border-right: tall $foreground;
-            padding: 1 2;
-            margin-left: 1;
-        }
 
-        CSVPreview > VerticalGroup {
-            width: 60%;
-            padding: 0 1;
-
-            & Label {
-                margin-bottom: 1;
+            & > CSVTree { 
+                padding: 1 2;
+                background: transparent;
             }
         }
-    
+
+        & #data_preview_widget Label {
+            margin-bottom: 1;
+        }
     }
 """
     
@@ -97,7 +96,8 @@ class FileScreen(Screen):
             yield Static("nessuno", id="current_path")
         yield Rule(line_style="dashed")
         with HorizontalGroup(id="current_tree_group"):
-            yield self.CSVTree(str(Path("./data")))
+            with HorizontalGroup(id="left_pane"):
+                yield self.CSVTree(str(Path("./data")))
             yield self.CSVPreview(id="data_preview_widget")
         yield Footer()
 
@@ -113,7 +113,6 @@ class FileScreen(Screen):
                 csv_reader = csv.reader(f)
                 rows_count = sum(1 for _ in f)
                 f.seek(0)
-                next(csv_reader)
                 rows_count = min(1000, rows_count)
                 current_path_group.update(f"{current_filename} ({rows_count} righe)") # type: ignore
                 current_path_group.styles.color = "#03AC13"
@@ -126,4 +125,4 @@ class FileScreen(Screen):
     def on_tree_node_highlighted(self, event) -> None:
         current_path = event.node.data.path
         self.current_path = current_path.parent
-        self.current_filename = current_path.name if current_path.is_file() else "nessuno"
+        self.current_filename = current_path.name if current_path.is_file() else "nessuno" 

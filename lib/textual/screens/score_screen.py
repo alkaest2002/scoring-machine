@@ -2,9 +2,8 @@ import re
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Label, Static, Rule, Footer, Input, Button
+from textual.widgets import Label, Static, Rule, Footer, Input, Button,  RadioButton, RadioSet
 from textual.containers import HorizontalGroup, VerticalGroup
-from textual.events import Key
 class ScoringScreen(Screen):
 
     def __repr__(self) -> str:
@@ -34,6 +33,11 @@ class ScoringScreen(Screen):
         Button {
             margin-left: 1;
         }
+    
+        RadioSet {
+            background: transparent;
+            width: 100%;
+        }
     }
    
 """
@@ -44,13 +48,22 @@ class ScoringScreen(Screen):
             yield Static(id="current_path")
         yield Rule(line_style="dashed")
         with VerticalGroup():
-            yield Input(id="test_id")
+            with RadioSet(id="compute_standard_scores_group"):
+                yield RadioButton("calcola punteggi standard", id="compute_standard_scores", value=True)
+                yield RadioButton("non calcolare punteggi standard", id="do_not_compute_standard_scores")
+            with RadioSet(id="output_type_group"):
+                yield RadioButton("tipo di output: pdf", id="output_type_pdf", value=True)
+                yield RadioButton("tipo di output: csv", id="output_type_csv")
+                yield RadioButton("tipo di output: json", id="output_type_json")
+            with RadioSet(id="split_reports_group"):
+                yield RadioButton("genera report singoli", id="split_reports_yes", value=True)
+                yield RadioButton("genera report unico", id="split_reports_no")
             yield Button("avvia siglatura", id="score_button", variant="primary")
         yield Footer(show_command_palette=False)
 
     def on_input_submitted(self) -> None:
-        score_button = self.query_one("#score_button")
-        self.set_focus(score_button)
+        next_element_to_focus = self.query_one("#compute_standard_scores_group")
+        self.set_focus(next_element_to_focus)
 
     def on_button_pressed(self, event: Button.Pressed):
         print("------------->", event.handler_name)
@@ -60,14 +73,6 @@ class ScoringScreen(Screen):
         df = self.app.current_job["df"] # type: ignore
         return f"{current_path.name} ({ df.shape[0] } righe)" # type: ignore
     
-    def get_test_id_from_path(self) -> re.Match:
-        available_tests = [ f.name for f in Path("./lib/tests").iterdir() if f.is_dir() and not f.name.startswith('_')]
-        matches = [re.search(test, self.app.current_job["current_path"].name) for test in available_tests] # type: ignore
-        return [match for match in matches if match][0]
-    
     def on_screen_resume(self) -> None:
         current_path_element = self.query_one("#current_path")
         current_path_element.update(self.get_current_path_label()) # type: ignore
-        current_test_element = self.query_one("#test_id")
-        test_id_match = self.get_test_id_from_path()
-        current_test_element.value =  test_id_match.group(0) if test_id_match else "" # type: ignore

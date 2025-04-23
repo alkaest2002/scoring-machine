@@ -10,6 +10,8 @@ from textual.screen import Screen
 from textual.widgets import Label, DirectoryTree, Static, Footer, Rule
 from textual.containers import HorizontalGroup, VerticalGroup
 
+AVAILABLE_TESTS = [ f.name for f in Path("./lib/tests").iterdir() if f.is_dir() and not f.name.startswith('_')]
+
 class FileScreen(Screen):
 
     def __repr__(self) -> str:
@@ -17,9 +19,11 @@ class FileScreen(Screen):
 
     class CSVTree(DirectoryTree):
         def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-            filter_condition1 = lambda x: x.suffix.__eq__(".csv")
-            filder_condition2 = lambda x: x.is_dir() and x.name[0] != "."
-            return [path for path in paths if any([filter_condition1(path), filder_condition2(path)])]
+            filter_cond_A = lambda x: x.suffix.__eq__(".csv") and any([test.lower() in x.name.lower() for test in AVAILABLE_TESTS])
+            filter_cond_B = lambda x: x.is_dir() and x.name[0] != "."
+            filtered_paths = [path for path in paths if any([filter_cond_A(path), filter_cond_B(path)])]
+            print("XXX ------------>", filtered_paths)
+            return filtered_paths
         
     class CSVPreview(Widget):
         data_provider = reactive("...")
@@ -69,6 +73,10 @@ class FileScreen(Screen):
             margin-right: 1;
             border-right: tall $foreground;
 
+            & Static {
+                padding: 1 2;
+            }
+
             & > CSVTree { 
                 padding: 1 2;
                 background: transparent;
@@ -91,7 +99,8 @@ class FileScreen(Screen):
             yield Static("nessuno", id="current_path")
         yield Rule(line_style="dashed")
         with HorizontalGroup(id="current_tree_group"):
-            with HorizontalGroup(id="left_pane"):
+            with VerticalGroup(id="left_pane"):
+                yield Static("Elenco dei file compatibili (i.e., <nome_test>_data.csv).")
                 yield self.CSVTree(str(Path("./data")))
             yield self.CSVPreview(id="data_preview_widget")
         yield Footer(show_command_palette=False)

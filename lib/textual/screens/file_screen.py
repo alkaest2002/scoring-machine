@@ -82,7 +82,7 @@ class FileScreen(Screen):
 """
     
     BINDINGS = [
-        ("<", "change_screen(-1)", "prec."),
+        ("<", "change_screen(-1)", "prec"),
         (">", "change_screen(1)", "succ"),
     ]
 
@@ -99,7 +99,7 @@ class FileScreen(Screen):
             with HorizontalGroup(id="left_pane"):
                 yield self.CSVTree(str(Path("./data")))
             yield self.CSVPreview(id="data_preview_widget")
-        yield Footer()
+        yield Footer(show_command_palette=False)
 
     def on_mount(self) -> None:
         self.CSVTree.show_root = False  # type: ignore
@@ -111,7 +111,7 @@ class FileScreen(Screen):
             current_path = self.current_path / current_filename
             with open(current_path) as f:
                 csv_reader = csv.reader(f)
-                rows_count = sum(1 for _ in f)
+                rows_count = sum(1 for _ in f) -1
                 f.seek(0)
                 rows_count = min(1000, rows_count)
                 current_path_group.update(f"{current_filename} ({rows_count} righe)") # type: ignore

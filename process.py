@@ -4,7 +4,10 @@ from lib import TESTS_PATH
 from lib.processor import process
 
 # Get the list of available tests by scanning the tests folder
-available_tests = [f.name for f in TESTS_PATH.glob("[!.]*") if f.is_dir()]
+available_tests = [
+    f.name for f in TESTS_PATH.iterdir()
+    if f.is_dir() and not f.name.startswith('_')
+]
 
 # Initialize the argument parser
 parser = argparse.ArgumentParser(

@@ -1,3 +1,4 @@
+from datetime import date
 import pandas as pd
 from textual import on
 from textual.app import App
@@ -32,7 +33,12 @@ class MyApp(App):
 
     current_job: reactive[dict] = reactive({
         "current_path": None,
-        "df": None
+        "current_path_label": None,
+        "current_test": None,
+        "compute_standard_scores": True,
+        "output_type": "pdf",
+        "split_reports": False,
+        "assessment_date": date.today().strftime('%d/%m/%Y')
     })
 
     current_screen : reactive[str] = reactive("splashScreen")
@@ -62,7 +68,9 @@ class MyApp(App):
             self.current_screen = new_screen
 
     async def load_df(self) -> None:
-        self.current_job["df"] = pd.read_csv(self.current_job["current_path"], nrows=1000)
+        current_path = self.current_job["current_path"]
+        current_df = pd.read_csv(current_path, nrows=1000)
+        self.current_job["current_path_label"] = f"{current_path.name} ({current_df.shape[0]} righe)"
 
     @on(FileScreen.CSVTree.NodeHighlighted)
     async def on_file_screen_node_highlighted(self, event: FileScreen.CSVTree.NodeHighlighted) -> None:
@@ -70,6 +78,7 @@ class MyApp(App):
         if current_path.is_file():
             self.condition_to_switch_screen["scoreScreen"] = True
             self.current_job["current_path"] = current_path
+            self.current_job["current_test"] = current_path.name.split("_")[0]
             self.run_worker(self.load_df, exclusive=True)
         
 if __name__ == "__main__":

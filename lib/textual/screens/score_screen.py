@@ -68,11 +68,6 @@ class ScoringScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed):
         print("------------->", event.handler_name)
 
-    def get_current_path_label(self) -> str:
-        current_path = self.app.current_job["current_path"] # type: ignore
-        df = self.app.current_job["df"] # type: ignore
-        return f"{current_path.name} ({ df.shape[0] } righe)" # type: ignore
-    
     def on_screen_resume(self) -> None:
         current_path_element = self.query_one("#current_path")
-        current_path_element.update(self.get_current_path_label()) # type: ignore
+        current_path_element.update(self.app.current_job["current_path_label"]) # type: ignore

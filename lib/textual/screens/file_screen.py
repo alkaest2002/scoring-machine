@@ -19,10 +19,9 @@ class FileScreen(Screen):
 
     class CSVTree(DirectoryTree):
         def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-            filter_cond_A = lambda x: x.suffix.__eq__(".csv") and any([test.lower() in x.name.lower() for test in AVAILABLE_TESTS])
+            filter_cond_A = lambda x: any([f"{test.lower()}_data.csv" == x.name.lower() for test in AVAILABLE_TESTS])
             filter_cond_B = lambda x: x.is_dir() and x.name[0] != "."
             filtered_paths = [path for path in paths if any([filter_cond_A(path), filter_cond_B(path)])]
-            print("XXX ------------>", filtered_paths)
             return filtered_paths
         
     class CSVPreview(Widget):

@@ -34,11 +34,6 @@ class ScoringScreen(Screen):
     }
 """
 
-    BINDINGS = [
-        ("<", "change_screen(-1)", "prec"),
-        (">", "change_screen(1)", "succ"),
-    ]
-
     def compose(self) -> ComposeResult:
         with HorizontalGroup(id="current_path_group"):
             yield Label("File selezionato:")

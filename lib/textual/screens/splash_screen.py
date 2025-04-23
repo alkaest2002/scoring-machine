@@ -14,7 +14,7 @@ Applicativo per la siglatura di questionari psicologici.
 - Avviare la siglatura dei dati.
 - Generare ed esportare i report.
 
-Premi la freccia &lt;destra&gt; per andare avanti.
+Premi il tasto command e la freccia destra |CMD →| per andare avanti.
 """
 
 class SplashScreen(Screen):

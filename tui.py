@@ -1,6 +1,7 @@
 import pandas as pd
 from textual import on
 from textual.app import App
+from textual.binding import Binding
 from textual.reactive import reactive
 from lib.textual.screens.splash_screen import SplashScreen
 from lib.textual.screens.file_screen import FileScreen
@@ -25,8 +26,8 @@ class MyApp(App):
     }
 
     BINDINGS = [
-        ("left", "app.change_screen(-1)", "move to previous screen"),
-        ("right", "app.change_screen(1)", "move to next screen"),
+        Binding("ctrl+a", "change_screen(-1)", "prec", priority=True, key_display="CMD ←"),
+        Binding("ctrl+e", "change_screen(1)", "succ", priority=True, key_display="CMD →"),
     ]
 
     current_job: reactive[dict] = reactive({

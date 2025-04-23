@@ -81,11 +81,6 @@ class FileScreen(Screen):
     }
 """
     
-    BINDINGS = [
-        ("<", "change_screen(-1)", "prec"),
-        (">", "change_screen(1)", "succ"),
-    ]
-
     current_path = reactive[Path](Path("./data"))
     
     current_filename = reactive[str]("nessuno", layout=True)

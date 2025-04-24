@@ -10,9 +10,8 @@ Applicativo per la siglatura di questionari psicologici.
 ## Cosa dovrai fare
 
 - Selezionare il file CSV contenente i dati da siglare.
-- Scegliere il questionario/test di riferimento.
-- Avviare la siglatura dei dati.
-- Generare ed esportare i report.
+- Configurare il tipo di siglatura.
+- Avviare la siglatura dei dati e la generazione dei report.
 
 Premi il tasto command e la freccia destra |CMD →| per andare avanti.
 """

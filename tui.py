@@ -1,5 +1,6 @@
-from datetime import date
 import pandas as pd
+
+from datetime import date
 from textual import on
 from textual.app import App
 from textual.binding import Binding
@@ -38,7 +39,7 @@ class MyApp(App):
         "compute_standard_scores": True,
         "output_type": "pdf",
         "split_reports": False,
-        "assessment_date": date.today().strftime('%d/%m/%Y')
+        "assessment_date": date.today().strftime("%d/%m/%Y")
     })
 
     current_screen : reactive[str] = reactive("splashScreen")

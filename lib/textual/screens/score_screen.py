@@ -1,5 +1,6 @@
 import asyncio
 from email import message
+from unittest.mock import NonCallableMagicMock
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widget import Widget
@@ -24,7 +25,6 @@ class ScoringScreen(Screen):
         def render(self) -> str:
             return self.message
 
-    
     CSS = """
 
     HorizontalGroup {
@@ -90,11 +90,11 @@ class ScoringScreen(Screen):
         self.query_one("#job_status").message = "" # type: ignore
         self.app.current_job[event.control.id] = bool(event.pressed.name) if event.pressed.name in ["True", "False"] else event.pressed.name  # type: ignore
 
-    def on_input_submitted(self) -> None:
-        next_element_to_focus = self.query_one("#compute_standard_scores_group")
-        self.set_focus(next_element_to_focus)
-
+    def notify_message(self, message: str) -> None:
+        self.query_one("#job_status").message = message # type: ignore
+    
     async def score_data(self) -> None:
+        self.app.call_from_thread(self.notify_message, "Siglatura in corso. Prego, attendere...") # type: ignore
         try:
             data_provider: DataProvider = DataProvider(self.app.current_job["current_test"]) # type: ignore
             data_container: DataContainer = DataContainer(data_provider)
@@ -109,14 +109,13 @@ class ScoringScreen(Screen):
                     assessment_date=self.app.current_job["assessment_date"],  # type: ignore
                     split_reports=self.app.current_job["split_reports"] # type: ignore
                 )
-            self.query_one("#job_status").message = "Siglatura conclusa." # type: ignore
+            self.app.call_from_thread(self.notify_message, "Siglatura terminata.") # type: ignore
         except Exception as e:
             print(e)
-            self.query_one("#job_status").message = f"Si è verificato il seguente errore: {e}" # type: ignore
+            self.app.call_from_thread(self.notify_message, f"Si è verificato il seguente errore: {e}") # type: ignore
 
-    def on_button_pressed(self):
-        self.query_one("#job_status").message = "Siglatura in corso. Prego, attendere..." # type: ignore
-        self.run_worker(self.score_data, exclusive=True)
+    async def on_button_pressed(self):
+        self.run_worker(self.score_data, thread=True)
 
     def on_screen_resume(self) -> None:
         self.query_one("#current_path_label").update(self.app.current_job["current_path_label"]) # type: ignore

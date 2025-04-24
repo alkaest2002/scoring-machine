@@ -1,10 +1,7 @@
-import asyncio
-from email import message
-from unittest.mock import NonCallableMagicMock
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widget import Widget
-from textual.widgets import Label, Rule, Footer, Button,  RadioButton, RadioSet, Static
+from textual.widgets import Label, Rule, Footer, Button,  RadioButton, RadioSet
 from textual.containers import HorizontalGroup, VerticalGroup
 from textual.reactive import reactive
 from lib.data_container import DataContainer

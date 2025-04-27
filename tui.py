@@ -8,7 +8,6 @@ from textual.reactive import reactive
 from lib.textual.screens.splash_screen import SplashScreen
 from lib.textual.screens.file_screen import FileScreen
 from lib.textual.screens.score_screen import ScoringScreen
-from lib.textual.screens.end_screen import EndScreen
 
 class MyApp(App):
 
@@ -24,12 +23,12 @@ class MyApp(App):
         "splashScreen": SplashScreen,
         "fileScreen": FileScreen,  
         "scoreScreen": ScoringScreen,
-        "endScreen": EndScreen,
     }
 
     BINDINGS = [
         Binding("ctrl+a", "change_screen(-1)", "prec", priority=True, key_display="CMD ←"),
         Binding("ctrl+e", "change_screen(1)", "succ", priority=True, key_display="CMD →"),
+        Binding("escape", "quit", "esci", priority=True, key_display="ESC"),
     ]
 
     current_job: reactive[dict] = reactive({

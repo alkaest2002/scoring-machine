@@ -17,11 +17,11 @@ from lib.scorer import Scorer
 from lib.standardizer import Standardizer
 
 class StatusMessages(Enum):
-    CANCELLED = "Operazione di siglatura annullata."
-    ERROR = "Ooops! Errore di siglatura."
-    PENDING = "Siglatura in attesa"
+    PENDING = ""
     RUNNING = "Siglatura in corso. Prego attendere..."
     SUCCESS = "Siglatura conclusa con successo."
+    ERROR = "Ooops! Errore di siglatura."
+    CANCELLED = "Operazione di siglatura annullata."
 
 class ScoringScreen(Screen):
 
@@ -95,6 +95,9 @@ class ScoringScreen(Screen):
         self.query_one("#current_path_label").update(self.app.current_job["current_path_label"]) # type: ignore
         self.query_one("#score_button").focus()
   
+    def on_radio_set_changed(self):
+        self.reset_worker()
+    
     def on_button_pressed(self):
         self.worker = self.score_data()
 
@@ -106,8 +109,8 @@ class ScoringScreen(Screen):
         self.notify_status(message)
 
     def reset_worker(self):
+        self.notify_status(StatusMessages.PENDING)
         if self.worker:
-            self.notify_status(StatusMessages.PENDING)
             self.worker.cancel()
     
     def notify_status(self, message: Enum):
@@ -129,5 +132,3 @@ class ScoringScreen(Screen):
         else:
             output_type = self.query_one("#output_type").pressed_button.name # type: ignore
             data_container.persist(type=output_type) # type: ignore
-           
-        

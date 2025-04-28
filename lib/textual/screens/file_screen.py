@@ -128,4 +128,4 @@ class FileScreen(Screen):
     def on_tree_node_highlighted(self, event) -> None:
         current_path = event.node.data.path
         self.current_path = current_path.parent
-        self.current_filename = current_path.name if current_path.is_file() else "nessuno" 
+        self.current_filename = current_path.name if current_path.is_file() else "nessuno"

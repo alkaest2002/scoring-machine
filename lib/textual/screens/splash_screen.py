@@ -7,13 +7,13 @@ md ="""
 
 Applicativo per la siglatura di questionari psicologici.
 
-## Cosa dovrai fare
+## Cosa dovrai fare:
 
-- Selezionare il file CSV contenente i dati da siglare.
+- Selezionare il file CSV (nella cartella data) contenente i dati da siglare.
 - Configurare il tipo di siglatura.
-- Avviare la siglatura dei dati e la generazione dei report.
+- Avviare la siglatura e la generazione dei report.
 
-Premi il tasto command e la freccia destra |CMD →| per andare avanti.
+Premi il tasto command + freccia destra |CMD →| per andare avanti.
 """
 
 class SplashScreen(Screen):

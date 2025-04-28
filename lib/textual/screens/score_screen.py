@@ -107,6 +107,8 @@ class ScoringScreen(Screen):
             w.disabled = event.state.name == WorkerState.RUNNING.name
         self.query_one(Button).disabled = event.state.name == WorkerState.RUNNING.name
         self.notify_status(message)
+        event.stop()
+        
 
     def reset_worker(self):
         self.notify_status(StatusMessages.PENDING)
@@ -116,7 +118,7 @@ class ScoringScreen(Screen):
     def notify_status(self, message: Enum):
         self.query_one("#job_status").update(message.value) # type: ignore
 
-    @work(exclusive=True, thread=True)
+    @work(name="score_worker", exclusive=True, thread=True)
     async def score_data(self) -> None:
         data_provider: DataProvider = DataProvider(self.app.current_job["current_test"]) # type: ignore
         data_container: DataContainer = DataContainer(data_provider)

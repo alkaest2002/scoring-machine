@@ -1,6 +1,8 @@
+from pathlib import Path
 import pandas as pd
 
-from textual import on
+from textual import on, work
+from textual.worker import Worker, WorkerState
 from textual.app import App
 from textual.binding import Binding
 from textual.reactive import reactive
@@ -62,11 +64,11 @@ class MyApp(App):
         if self.condition_to_switch_screen.get(new_screen, True):
             self.current_screen = new_screen
 
-    async def load_df(self) -> None:
-        current_path = self.current_job["current_path"]
+    @work(name="score_worker", exclusive=True, thread=True)
+    async def load_df(self, current_path: Path) -> str:
         current_df = pd.read_csv(current_path, nrows=1000)
         current_path_label = f"{current_path.name} ({current_df.shape[0]} righe)"
-        self.current_job["current_path_label"] = current_path_label
+        return current_path_label
 
     @on(FileScreen.CSVTree.NodeHighlighted)
     async def on_file_screen_node_highlighted(self, event: FileScreen.CSVTree.NodeHighlighted) -> None:
@@ -75,7 +77,12 @@ class MyApp(App):
             self.condition_to_switch_screen["scoreScreen"] = True
             self.current_job["current_path"] = current_path
             self.current_job["current_test"] = current_path.name.split("_")[0]
-            self.run_worker(self.load_df, exclusive=True)
+            self.load_df(current_path)
+    
+    @on(Worker.StateChanged)
+    def on_wroker_state_changed(self, event: Worker.StateChanged):
+        if  event.state == WorkerState.SUCCESS:
+            self.current_job["current_path_label"] = event.worker.result
 
 if __name__ == "__main__":
     app = MyApp()

@@ -2,7 +2,8 @@ import csv
 
 from rich.text import Text
 from pathlib import Path
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Optional
+from textual.binding import Binding
 from textual.widget import Widget
 from textual.reactive import reactive
 from textual.app import ComposeResult
@@ -88,10 +89,17 @@ class FileScreen(Screen):
     }
 """
     
-    current_path = reactive[Path](Path("./data"))
+    BINDINGS = [
+        Binding("ctrl+a", "go_to('splashScreen')", "prec", key_display="CMD ←"),
+        Binding("ctrl+e", "go_to('scoreScreen')", "succ", key_display="CMD →"),
+    ]
     
-    current_filename = reactive[str]("nessuno", layout=True)
+    current_path = reactive[Optional[Path]](None)
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_reactive(FileScreen.current_path, Path("./data"))
+    
     def compose(self) -> ComposeResult:
         with HorizontalGroup(id="current_path_group"):
             yield Label("Seleziona il file CSV da siglare:")
@@ -106,26 +114,34 @@ class FileScreen(Screen):
 
     def on_mount(self) -> None:
         self.CSVTree.show_root = False  # type: ignore
-        
-    def watch_current_filename(self, current_filename: str):
+
+    def action_go_to(self, screen: str) -> None:
+        self.app.switch_screen(screen)
+
+    def check_action(self, action: str, parameters: tuple[object, ...]):
+        if action == "go_to" and parameters[0] == "scoreScreen" and self.current_path.is_dir():
+            return None
+        return True
+    
+    def watch_current_path(self, current_path: Path):
         current_path_group = self.query_one("#current_path")
         data_preview = self.query_one("#data_preview_widget")
-        if current_filename != "nessuno":
-            current_path = self.current_path / current_filename
+        if current_path.is_file():
             with open(current_path) as f:
                 csv_reader = csv.reader(f)
                 rows_count = sum(1 for _ in f) -1
                 f.seek(0)
                 rows_count = min(1000, rows_count)
-                current_path_group.update(f"{current_filename} ({rows_count} righe)") # type: ignore
+                current_path_group.update(f"{current_path.name} ({rows_count} righe)") # type: ignore
                 current_path_group.styles.color = "#03AC13"
                 data_preview.data_provider = csv_reader # type: ignore
         else:
             current_path_group.update("nessuno") # type: ignore
             current_path_group.styles.color = "#fb4934"
             data_preview.data_provider = "..." # type: ignore
+        self.refresh_bindings()
+        
 
     def on_tree_node_highlighted(self, event) -> None:
         current_path = event.node.data.path
-        self.current_path = current_path.parent
-        self.current_filename = current_path.name if current_path.is_file() else "nessuno"
+        self.current_path = current_path

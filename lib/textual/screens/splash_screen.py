@@ -1,6 +1,7 @@
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Markdown
+from textual.binding import Binding
+from textual.widgets import Markdown, Footer
 
 md ="""
 # THE SCORING MACHINE PROJECT
@@ -34,6 +35,10 @@ class SplashScreen(Screen):
         padding: 0;
     }
 """
+    BINDINGS = [
+        Binding("ctrl+e", "app.switch_screen('fileScreen')", "succ", key_display="CMD →"),
+    ]
 
     def compose(self) -> ComposeResult:
         yield Markdown(md)
+        yield Footer(show_command_palette=False)

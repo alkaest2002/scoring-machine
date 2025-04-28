@@ -4,6 +4,7 @@ from datetime import date
 
 from textual import work
 from textual.reactive import reactive
+from textual.binding import Binding
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.worker import Worker, WorkerState
@@ -67,6 +68,9 @@ class ScoringScreen(Screen):
     }
    
 """
+    BINDINGS = [
+        Binding("ctrl+a", "app.switch_screen('fileScreen')", "prec", key_display="CMD ←"),
+    ]
     worker: Optional[Worker] = reactive(None) # type: ignore
 
     def compose(self) -> ComposeResult:
@@ -90,7 +94,7 @@ class ScoringScreen(Screen):
             yield Static(id="job_status")
         yield Footer(show_command_palette=False)
 
-    def _on_screen_suspend(self):
+    def on_screen_suspend(self):
        self.reset_worker()
     
     def on_screen_resume(self) -> None:

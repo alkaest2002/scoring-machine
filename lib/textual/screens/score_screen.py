@@ -1,11 +1,12 @@
 from typing import Optional
 from enum import Enum
+from datetime import date
 
+from textual import work
+from textual.reactive import reactive
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual import work
 from textual.worker import Worker, WorkerState
-from textual.reactive import reactive
 from textual.widgets import Label, Rule, Footer, Button,  RadioButton, RadioSet, Static
 from textual.containers import HorizontalGroup, VerticalGroup
 from lib.data_container import DataContainer
@@ -75,15 +76,15 @@ class ScoringScreen(Screen):
         yield Rule(line_style="dashed")
         with VerticalGroup(id="current_job_options"):
             with RadioSet(id="compute_standard_scores"):
-                yield RadioButton("calcola punteggi standard", name="True", value=True)
-                yield RadioButton("non calcolare punteggi standard", name="False")
+                yield RadioButton("calcola punteggi standard", id="compute_standard_scores_true", name="True", value=True)
+                yield RadioButton("non calcolare punteggi standard", id="compute_standard_scores_false", name="False")
             with RadioSet(id="output_type"):
-                yield RadioButton("tipo di output: pdf", name="pdf", value=True)
-                yield RadioButton("tipo di output: csv", name="csv")
-                yield RadioButton("tipo di output: json", name="json")
+                yield RadioButton("tipo di output: pdf",  id="output_type_pdf", name="pdf", value=True)
+                yield RadioButton("tipo di output: csv",  id="output_type_csv", name="csv")
+                yield RadioButton("tipo di output: json", id="output_type_json", name="json")
             with RadioSet(id="split_reports"):
-                yield RadioButton("genera report unico", name="False", value=True)
-                yield RadioButton("genera report singoli", name="True")
+                yield RadioButton("genera report unico", id="split_reports_false",  name="False", value=True)
+                yield RadioButton("genera report singoli", id="split_reports_true",  name="True")
         with VerticalGroup(id="current_job"):
             yield Button("avvia siglatura", id="score_button", variant="primary")
             yield Static(id="job_status")
@@ -94,12 +95,8 @@ class ScoringScreen(Screen):
         self.query_one("#current_path_label").update(self.app.current_job["current_path_label"]) # type: ignore
         self.query_one("#score_button").focus()
   
-    def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
-        self.reset_worker()
-        self.app.current_job[event.control.id] = bool(event.pressed.name) if event.pressed.name in ["True", "False"] else event.pressed.name  # type: ignore
-
     def on_button_pressed(self):
-        self.worker = self.score_data() # type: ignore
+        self.worker = self.score_data()
 
     def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
         message = StatusMessages[event.state.name]
@@ -122,13 +119,15 @@ class ScoringScreen(Screen):
         data_container: DataContainer = DataContainer(data_provider)
         data_container: DataContainer = Sanitizer(data_container).sanitize_data()
         data_container: DataContainer = Scorer(data_container).compute_raw_related_scores()
-        if self.app.current_job["compute_standard_scores"]: # type: ignore
+        if self.query_one("#compute_standard_scores_true").value: # type: ignore
             data_container: DataContainer = Standardizer(data_container).compute_standard_scores()
-        if self.app.current_job["output_type"] != "pdf": # type: ignore
-            data_container.persist(type=self.app.current_job["output_type"]) # type: ignore
-        else:
+        if self.query_one("#output_type_pdf").value: # type: ignore
             Reporter(data_container).generate_report(
-                assessment_date=self.app.current_job["assessment_date"],  # type: ignore
-                split_reports=self.app.current_job["split_reports"] # type: ignore
+                assessment_date=date.today().strftime("%d/%m/%Y"),  # type: ignore
+                split_reports=self.query_one("#split_reports_true").value # type: ignore
             )
+        else:
+            output_type = self.query_one("#output_type").pressed_button.name # type: ignore
+            data_container.persist(type=output_type) # type: ignore
+           
         

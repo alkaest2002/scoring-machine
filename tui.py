@@ -1,6 +1,6 @@
-from pathlib import Path
 import pandas as pd
 
+from pathlib import Path
 from textual import on, work
 from textual.worker import Worker, WorkerState
 from textual.app import App

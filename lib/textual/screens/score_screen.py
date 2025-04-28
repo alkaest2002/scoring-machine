@@ -90,6 +90,9 @@ class ScoringScreen(Screen):
             yield Static(id="job_status")
         yield Footer(show_command_palette=False)
 
+    def _on_screen_suspend(self):
+       self.reset_worker()
+    
     def on_screen_resume(self) -> None:
         self.reset_worker()
         self.query_one("#current_path_label").update(self.app.current_job["current_path_label"]) # type: ignore
@@ -108,7 +111,6 @@ class ScoringScreen(Screen):
         self.query_one(Button).disabled = event.state.name == WorkerState.RUNNING.name
         self.notify_status(message)
         event.stop()
-        
 
     def reset_worker(self):
         self.notify_status(StatusMessages.PENDING)

@@ -107,9 +107,9 @@ class ScoringScreen(Screen):
 
     def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
         message = StatusMessages[event.state.name]
-        for w in self.query(RadioSet):
-            w.disabled = event.state.name == WorkerState.RUNNING.name
-        self.query_one(Button).disabled = event.state.name == WorkerState.RUNNING.name
+        disable_widget = event.state.name == WorkerState.RUNNING.name
+        for w in [ *self.query(RadioSet), self.query_one(Button)]:
+            w.disabled = disable_widget
         self.notify_status(message)
         event.stop()
 

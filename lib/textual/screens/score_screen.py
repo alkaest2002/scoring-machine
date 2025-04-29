@@ -26,9 +26,6 @@ class StatusMessages(Enum):
 
 class ScoringScreen(Screen):
 
-    def __repr__(self) -> str:
-        return "scoreScreen"
-    
     CSS = """
 
     #current_path_group {
@@ -66,11 +63,12 @@ class ScoringScreen(Screen):
             margin-bottom: 1
         }
     }
-   
+   ß
 """
     BINDINGS = [
-        Binding("ctrl+a", "app.switch_screen('fileScreen')", "prec", key_display="CMD ←"),
+        Binding("p", "app.switch_screen('fileScreen')", "prec"),
     ]
+    
     worker: Optional[Worker] = reactive(None) # type: ignore
 
     def compose(self) -> ComposeResult:

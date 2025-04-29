@@ -27,7 +27,7 @@ class MyApp(App):
     }
 
     BINDINGS = [
-        Binding("escape", "quit", "esci", priority=True, key_display="ESC"),
+        Binding("escape", "quit", "esci", priority=True, key_display="esc"),
     ]
 
     current_job: reactive[dict] = reactive({

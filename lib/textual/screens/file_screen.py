@@ -15,18 +15,14 @@ AVAILABLE_TESTS = [ f.name for f in Path("./lib/tests").iterdir() if f.is_dir() 
 
 class FileScreen(Screen):
 
-    def __repr__(self) -> str:
-        return "fileScreen"
-
     class CSVTree(DirectoryTree):
         def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
             filter_cond_A = lambda x: any([f"{test.lower()}_data.csv" == x.name.lower() for test in AVAILABLE_TESTS])
             filter_cond_B = lambda x: x.is_dir() and x.name[0] != "."
-            filtered_paths = [path for path in paths if any([filter_cond_A(path), filter_cond_B(path)])]
-            return filtered_paths
+            return [path for path in paths if any([filter_cond_A(path), filter_cond_B(path)])]
         
     class CSVPreview(Widget):
-        data_provider = reactive("...")
+        data_provider = reactive[str]("...")
 
         def compose(self) -> ComposeResult:
             with VerticalGroup():
@@ -90,8 +86,8 @@ class FileScreen(Screen):
 """
     
     BINDINGS = [
-        Binding("ctrl+a", "go_to('splashScreen')", "prec", key_display="CMD ←"),
-        Binding("ctrl+e", "go_to('scoreScreen')", "succ", key_display="CMD →"),
+        Binding("p", "go_to('splashScreen')", "prec"),
+        Binding("s", "go_to('scoreScreen')", "succ"),
     ]
     
     current_path = reactive[Optional[Path]](None)
@@ -119,7 +115,7 @@ class FileScreen(Screen):
         self.app.switch_screen(screen)
 
     def check_action(self, action: str, parameters: tuple[object, ...]):
-        if action == "go_to" and parameters[0] == "scoreScreen" and self.current_path.is_dir():
+        if action == "go_to" and parameters[0] == "scoreScreen" and self.current_path.is_dir(): # type: ignore
             return None
         return True
     
@@ -141,7 +137,6 @@ class FileScreen(Screen):
             data_preview.data_provider = "..." # type: ignore
         self.refresh_bindings()
         
-
     def on_tree_node_highlighted(self, event) -> None:
         current_path = event.node.data.path
         self.current_path = current_path

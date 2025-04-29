@@ -14,7 +14,7 @@ Applicativo per la siglatura di questionari psicologici.
 - Configurare il tipo di siglatura che sarà effettuata.
 - Avviare la siglatura e la generazione dei report.
 
-Premi la lettera |s| per andare avanti.
+Premi la lettera |w| per andare avanti.
 """
 
 class SplashScreen(Screen):
@@ -33,7 +33,7 @@ class SplashScreen(Screen):
     }
 """
     BINDINGS = [
-        Binding("s", "app.switch_screen('fileScreen')", "succ"),
+        Binding("w", "app.switch_screen('fileScreen')", "succ"),
     ]
 
     def compose(self) -> ComposeResult:

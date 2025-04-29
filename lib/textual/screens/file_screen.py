@@ -87,8 +87,8 @@ class FileScreen(Screen):
 """
     
     BINDINGS = [
-        Binding("p", "go_to('splashScreen')", "prec"),
-        Binding("s", "go_to('scoreScreen')", "succ"),
+        Binding("q", "go_to('splashScreen')", "prec"),
+        Binding("w", "go_to('scoreScreen')", "succ"),
     ]
     
     current_path = reactive[Optional[Path]](None, bindings=True)

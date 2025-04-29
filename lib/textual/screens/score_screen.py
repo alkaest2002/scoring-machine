@@ -65,7 +65,7 @@ class ScoringScreen(Screen):
     }
 """
     BINDINGS = [
-        Binding("p", "app.switch_screen('fileScreen')", "prec"),
+        Binding("q", "app.switch_screen('fileScreen')", "prec"),
     ]
     
     worker: Optional[Worker] = reactive(None) # type: ignore

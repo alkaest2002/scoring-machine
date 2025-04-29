@@ -55,7 +55,7 @@ class MyApp(App):
             self.load_df(current_path)
     
     @on(Worker.StateChanged)
-    def on_wroker_state_changed(self, event: Worker.StateChanged):
+    def on_worker_state_changed(self, event: Worker.StateChanged):
         if  event.state == WorkerState.SUCCESS:
             self.current_job["current_path_label"] = event.worker.result
 

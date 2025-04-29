@@ -29,7 +29,6 @@ class ScoringScreen(Screen):
     CSS = """
 
     #current_path_group {
-
         margin-bottom: 1;
 
         #current_path_label {
@@ -58,12 +57,12 @@ class ScoringScreen(Screen):
             }
         }
     }
+    
     #current_job {
         Button {
             margin-bottom: 1
         }
     }
-   ß
 """
     BINDINGS = [
         Binding("p", "app.switch_screen('fileScreen')", "prec"),

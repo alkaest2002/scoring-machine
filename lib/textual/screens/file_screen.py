@@ -22,11 +22,12 @@ class FileScreen(Screen):
             return [path for path in paths if any([filter_cond_A(path), filter_cond_B(path)])]
         
     class CSVPreview(Widget):
+        
         data_provider = reactive[str]("...")
 
         def compose(self) -> ComposeResult:
             with VerticalGroup():
-                yield Label(Text("Prima riga", style="italic"))
+                yield Label(Text("Prima riga", style="italic"), id="data_preview_label")
                 yield Static("...", id="data_preview")
 
         def watch_data_provider(self, newVal: str | Generator) -> None:
@@ -62,7 +63,7 @@ class FileScreen(Screen):
         padding-left: 0;
         layout: horizontal;
 
-        & #left_pane {
+        & > VerticalGroup {
             width: 40%;
             height: auto;
             background: $panel;
@@ -79,7 +80,7 @@ class FileScreen(Screen):
             }
         }
 
-        & #data_preview_widget Label {
+        CSVPreview Label {
             margin-bottom: 1;
         }
     }
@@ -90,7 +91,7 @@ class FileScreen(Screen):
         Binding("s", "go_to('scoreScreen')", "succ"),
     ]
     
-    current_path = reactive[Optional[Path]](None)
+    current_path = reactive[Optional[Path]](None, bindings=True)
 
     def __init__(self) -> None:
         super().__init__()
@@ -99,13 +100,13 @@ class FileScreen(Screen):
     def compose(self) -> ComposeResult:
         with HorizontalGroup(id="current_path_group"):
             yield Label("Seleziona il file CSV da siglare:")
-            yield Static("nessuno", id="current_path")
+            yield Static("nessuno")
         yield Rule(line_style="dashed")
         with HorizontalGroup(id="current_tree_group"):
-            with VerticalGroup(id="left_pane"):
+            with VerticalGroup():
                 yield Static("Elenco dei file compatibili (i.e., <nome_test>_data.csv).")
                 yield self.CSVTree(str(Path("./data")))
-            yield self.CSVPreview(id="data_preview_widget")
+            yield self.CSVPreview()
         yield Footer(show_command_palette=False)
 
     def on_mount(self) -> None:
@@ -120,23 +121,21 @@ class FileScreen(Screen):
         return True
     
     def watch_current_path(self, current_path: Path):
-        current_path_group = self.query_one("#current_path")
-        data_preview = self.query_one("#data_preview_widget")
+        current_path_label = self.query_one("#current_path_group Static")
+        csv_preview = self.query_one(self.CSVPreview)
         if current_path.is_file():
             with open(current_path) as f:
                 csv_reader = csv.reader(f)
                 rows_count = sum(1 for _ in f) -1
                 f.seek(0)
                 rows_count = min(1000, rows_count)
-                current_path_group.update(f"{current_path.name} ({rows_count} righe)") # type: ignore
-                current_path_group.styles.color = "#03AC13"
-                data_preview.data_provider = csv_reader # type: ignore
+                current_path_label.update(f"{current_path.name} ({rows_count} righe)") # type: ignore
+                current_path_label.styles.color = "#03AC13"
+                csv_preview.data_provider = csv_reader # type: ignore
         else:
-            current_path_group.update("nessuno") # type: ignore
-            current_path_group.styles.color = "#fb4934"
-            data_preview.data_provider = "..." # type: ignore
-        self.refresh_bindings()
+            current_path_label.update("nessuno") # type: ignore
+            current_path_label.styles.color = "#fb4934"
+            csv_preview.data_provider = "..." # type: ignore
         
     def on_tree_node_highlighted(self, event) -> None:
-        current_path = event.node.data.path
-        self.current_path = current_path
+        self.current_path = event.node.data.path

@@ -1,6 +1,12 @@
 import re
+from typing import TYPE_CHECKING, Any
+
 import pandas as pd
-from lib.data_container import DataContainer
+
+if TYPE_CHECKING:
+    from collections.abc import Hashable
+
+    from lib.data_container import DataContainer
 
 class Standardizer:
     """
@@ -19,8 +25,10 @@ class Standardizer:
         self.data_container: DataContainer = data_container
 
     def get_standard_scores_from_table(
-        self, series: pd.Series, norms: pd.DataFrame
-    ) -> list[dict]:
+        self,
+        series: pd.Series,
+        norms: pd.DataFrame
+    ) -> list[dict[Hashable, Any]]:
         """
         Maps raw scale scores into standardized scores using lookup from norms.
 
@@ -54,32 +62,31 @@ class Standardizer:
             right_on="raw",
             direction="nearest"
         )
-        
+
         # Replace the index of standardized scores with the original series index
         standard_scores.index = sorted_series.index
 
         # Restore the original order of the series by sorting standardized scores by their index
         standard_scores = standard_scores.sort_index()
-        
+
         # Convert the standardized scores to a list of dictionaries
         return standard_scores.iloc[:, 3:].to_dict(orient="records")
 
-    def compute_standard_scores_for_group(self, group_data: pd.DataFrame) -> pd.DataFrame:
+    def compute_standard_scores_for_group(
+        self, group_data: pd.DataFrame) -> pd.DataFrame:
         """
         Computes standardized scores for a specific group of participants based on their norms.
 
         Args:
-            group_data (pd.DataFrame): A DataFrame containing raw scores and the corresponding `norms_id` for a group.
+            grougroup_scoresp_data (pd.DataFrame): A DataFrame containing raw scores and the corresponding `norms_id` for a group.
 
         Returns:
             pd.DataFrame: A DataFrame containing standardized scores for the group,
                 including optional interpretations if available in the norms dataset.
         """
-        # Extract raw scores (all columns except the first column which is "norms_id")
-        group_scores: pd.DataFrame = group_data.iloc[:, 1:]
-        
-        # Extract the norms ID for the group (first column)
-        group_norms_id: str = str(group_data.iloc[0, 0])
+        # Extract the norms_id for the current group
+        group_norms_id: str = group_data["norms_id"].iloc[0]
+        group_scores: pd.DataFrame = group_data.drop(columns=["norms_id"])
 
         # Parse the norms ID string into a list of applicable norms IDs
         norms_list: list[str] = group_norms_id.split(" ")
@@ -88,10 +95,10 @@ class Standardizer:
         test_norms: pd.DataFrame = (
             self.data_container.test_norms[self.data_container.test_norms["norms_id"].isin(norms_list)]
         )
-        
+
         # Identify relevant columns for standardized scores and interpretations
         relevant_columns: list[str] = [col for col in ["std", "std_interpretation"] if col in test_norms.columns]
-        
+
         # Create a pivot table for norms, grouping by scale, raw values, and norms IDs
         norms_pivot: pd.DataFrame = test_norms.pivot_table(
             index=["scale", "raw"],
@@ -99,11 +106,11 @@ class Standardizer:
             values=relevant_columns,
             aggfunc=lambda x: x  # Preserve the original values
         ).reset_index()
-                
+
         # Adjust the multi-index columns to a flat structure for easier manipulation
         norms_pivot.columns = norms_pivot.columns.map("{0[1]}_{0[0]}".format)
         norms_pivot.columns = norms_pivot.columns.str.replace(r"^_", "", regex=True).str.replace(r"_std", "", regex=True)
-        
+
         # Compute standardized scores for each column in the group scores DataFrame
         return group_scores.apply(self.get_standard_scores_from_table, norms=norms_pivot)
 
@@ -131,18 +138,19 @@ class Standardizer:
                 self.data_container.data_norms,
                 self.data_container.test_scores.filter(regex=type_of_raw_score_regex)
             ],
-            axis=1 
+            axis=1
         )
 
-        # Compute standardized scores for participants grouped by norms_id     
+        results = []
+        for _, group in test_scores_with_norms_id.groupby(["norms_id"], sort=False):
+            result = self.compute_standard_scores_for_group(group)
+            results.append(result)
+
         self.data_container.test_standard_scores = (
-            test_scores_with_norms_id
-                .groupby(["norms_id"], sort=False)
-                .apply(self.compute_standard_scores_for_group)
-                .droplevel(level=0)
-                .add_prefix("std_")
-                .sort_index()
+            pd.concat(results)
+            .add_prefix("std_")
+            .sort_index()
         )
-        
+
         # Return the updated DataContainer instance with standardized scores included
         return self.data_container

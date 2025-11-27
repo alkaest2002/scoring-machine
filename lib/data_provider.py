@@ -1,15 +1,18 @@
 import json
+from typing import TYPE_CHECKING, Any, Literal
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Literal, Union
-from lib.errors import NotFoundError
-from lib import BASE_PATH, DATA_PATH, XEROX_PATH, LIB_PATH, TESTS_PATH
 
+from lib import BASE_PATH, DATA_PATH, LIB_PATH, TESTS_PATH, XEROX_PATH
+from lib.errors import NotFoundError
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 class DataProvider:
     """
-    Handles base folder paths and file management for the project. 
+    Handles base folder paths and file management for the project.
     Provides methods to retrieve paths and load test data, specifications, and norms.
     """
 
@@ -32,7 +35,7 @@ class DataProvider:
         Defines and validates the base folder paths for the project.
 
         Returns:
-            dict[str, Path]: A dictionary mapping folder names ('cwd', 'data', 'xerox', 'lib', 'tests') 
+            dict[str, Path]: A dictionary mapping folder names ('cwd', 'data', 'xerox', 'lib', 'tests')
                              to their respective `Path` objects.
 
         Raises:
@@ -58,7 +61,7 @@ class DataProvider:
         Retrieves the path of a specified folder.
 
         Args:
-            folderpath (Literal["cwd", "data", "xerox", "lib", "tests"]): 
+            folderpath (Literal["cwd", "data", "xerox", "lib", "tests"]):
                 The name of the folder to retrieve.
 
         Returns:
@@ -71,7 +74,7 @@ class DataProvider:
         Retrieves the relative path to a specific test-related file.
 
         Args:
-            type (Literal["data", "specs", "norms"]): The type of test file. 
+            type (Literal["data", "specs", "norms"]): The type of test file.
                 - "data"  -> Test's data CSV file.
                 - "specs" -> Test's specifications JSON file.
                 - "norms" -> Test's norms CSV file.
@@ -85,7 +88,7 @@ class DataProvider:
             filepath = self.get_folderpath("tests") / self.test_name / f"{self.test_name}_norms.csv"
         else:
             filepath = self.get_folderpath("tests") / self.test_name / f"{self.test_name}_specs.json"
-        
+
         return filepath.relative_to(BASE_PATH)
 
     def load_test_data(self) -> pd.DataFrame:
@@ -102,7 +105,7 @@ class DataProvider:
         # Read max 1000 rows
         return pd.read_csv(data_filepath, nrows=1000)
 
-    def load_test_specifications(self) -> dict:
+    def load_test_specifications(self) ->Any:
         """
         Loads test-specific specifications from a JSON file.
 
@@ -113,10 +116,10 @@ class DataProvider:
             FileNotFoundError: If the specification file does not exist.
         """
         test_specs_filepath = self.get_test_path("specs")
-        
+
         with test_specs_filepath.open() as file:
             test_specs_json = json.load(file)
-        
+
         return test_specs_json
 
     def load_test_norms(self) -> pd.DataFrame:
@@ -124,7 +127,7 @@ class DataProvider:
         Loads norms data for the test from a CSV file, if it exists.
 
         Returns:
-            pd.DataFrame: A DataFrame containing the norms data. 
+            pd.DataFrame: A DataFrame containing the norms data.
                           If the file does not exist, returns an empty DataFrame.
         """
         norms_filepath = self.get_test_path("norms")
@@ -133,14 +136,14 @@ class DataProvider:
             return pd.read_csv(norms_filepath, dtype={"raw": np.float64, "std": np.float64})
         else:
             return pd.DataFrame()
-        
-    def persist(self, data: Union[pd.DataFrame, dict]) -> None:
+
+    def persist(self, data: pd.DataFrame | dict[str, Any]) -> None:
 
         # If data is an instance of pd.Dataframe, save it as a csv
         if isinstance(data, pd.DataFrame):
             data.to_csv(self.get_folderpath("xerox") / f"{self.test_name}_scored.csv", index=False)
-        
-        # If data is a dict, save it as a json 
+
+        # If data is a dict, save it as a json
         elif isinstance(data, dict):
-            with open(self.get_folderpath("xerox") / f"{self.test_name}_scored.json", "w") as fout:
+            with (self.get_folderpath("xerox") / f"{self.test_name}_scored.json").open("w") as fout:
                 json.dump(data, fout, indent=2)

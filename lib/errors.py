@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class ValidationError(Exception):
     """Custom exception raised when a validation error occurs."""
     pass
@@ -29,20 +30,20 @@ class TracebackNotifier:
     def notify_traceback(self) -> None:
         """
         Walks through and prints the traceback associated with the stored exception.
-        Notifies each step in the traceback chain including the file, function name, 
+        Notifies each step in the traceback chain including the file, function name,
         and line number where the exception occurred.
 
-        On encountering any error during notification of the traceback, it attempts to 
+        On encountering any error during notification of the traceback, it attempts to
         store the new error and recursively notify its traceback.
         """
         try:
             # Retrieve the traceback object from the exception
             traceback = self.error.__traceback__
-            
+
             # Walk through each step in the traceback chain
             while traceback is not None:
                 # Print the current traceback step with information about file, function, and line
-                print(
+                print(  # noqa: T201
                     "-->",
                     Path(traceback.tb_frame.f_code.co_filename),
                     traceback.tb_frame.f_code.co_name,

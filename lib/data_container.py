@@ -1,26 +1,27 @@
 import json
+from functools import cached_property
+from typing import TYPE_CHECKING, Any, Literal
+
 import numpy as np
 import pandas as pd
 
-from functools import cached_property
-from typing import Literal
-
 from lib import UNAVAILABLE_NORMS
-from lib.data_provider import DataProvider
 from lib.test_specs import TestSpecs
 from lib.utils import expand_dict_like_columns
 
+if TYPE_CHECKING:
+    from lib.data_provider import DataProvider
 
 class DataContainer:
     """
     Manages the loading, organization, processing, and export of test-related data.
-    This includes test data, specifications, norms, computed scores (raw and standardized), 
+    This includes test data, specifications, norms, computed scores (raw and standardized),
     and combined results. The class supports data export in CSV and JSON formats.
     """
 
     def __init__(self, data_provider: DataProvider) -> None:
         """
-        Initializes the `DataContainer` with a provided data provider and loads 
+        Initializes the `DataContainer` with a provided data provider and loads
         the relevant test data, specifications, and norms.
 
         Args:
@@ -46,11 +47,11 @@ class DataContainer:
     @property # cannot be cached since sanitizer modifies the data
     def data_norms(self) -> pd.Series:
         """
-        Retrieves the 'norms_id' column from the test data. If the 'norms_id' column 
+        Retrieves the 'norms_id' column from the test data. If the 'norms_id' column
         is missing, assigns a default value (`UNAVAILABLE_NORMS`) to all rows.
 
         Returns:
-            pd.Series: A pandas Series containing values from the 'norms_id' column, 
+            pd.Series: A pandas Series containing values from the 'norms_id' column,
             or a default value if the column is unavailable.
         """
         if "norms_id" not in self.data.columns:
@@ -80,7 +81,7 @@ class DataContainer:
     @cached_property # can be cached since it is not modified
     def results(self) -> pd.DataFrame:
         """
-        Combines subject ids, answers data (`data_subject_ids`, `data_answers`), raw test scores (`test_scores`) 
+        Combines subject ids, answers data (`data_subject_ids`, `data_answers`), raw test scores (`test_scores`)
         and standardized scores (`test_standard_scores`) into a single DataFrame.
 
         Returns:
@@ -89,13 +90,13 @@ class DataContainer:
         return pd.concat([
             self.data_subject_ids,
             self.data_answers,
-            self.test_scores, 
+            self.test_scores,
             self.test_standard_scores], axis=1)
-    
+
     @cached_property # can be cached since it is not modified
-    def test_specs_and_results(self) -> dict:
+    def test_specs_and_results(self) -> dict[str, Any]:
         """
-        Aggregates test specifications, raw test data, and test results 
+        Aggregates test specifications, raw test data, and test results
         into a structured dictionary.
 
         Returns:
@@ -117,16 +118,19 @@ class DataContainer:
             type (str): Desired output format ('csv' or 'json').
         """
         if type == "csv":
-            
+
             # Create a copy of test results
-            data_to_persist = self.results.copy()
-            
+            data_to_persist_csv: pd.DataFrame = self.results.copy()
+
             # Expand dictionary-like columns if requested
-            data_to_persist = expand_dict_like_columns(data_to_persist, regex_for_dict_like="std_")
-            
+            data_to_persist_csv_expanded: pd.DataFrame =\
+                expand_dict_like_columns(data_to_persist_csv, regex_for_dict_like="std_)")
+
+            self.data_provider.persist(data_to_persist_csv_expanded)
+
         else:
             # Create a copy of test data
-            data_to_persist = self.test_specs_and_results.copy()
-        
+            data_to_persist_json: dict[str, Any] = self.test_specs_and_results.copy()
+
         # Persist the data to disk
-        self.data_provider.persist(data_to_persist)
+        self.data_provider.persist(data_to_persist_json)

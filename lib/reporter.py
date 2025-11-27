@@ -1,9 +1,14 @@
-from pathlib import Path
 from itertools import batched
-from jinja2 import FileSystemLoader, Environment
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
+
 from lib import TESTS_PATH, XEROX_PATH
-from lib.data_container import DataContainer
+
+if TYPE_CHECKING:
+    from lib.data_container import DataContainer
 
 # Initialize the Jinja2 environment for rendering HTML templates
 jinja_env: Environment = Environment(loader=FileSystemLoader([TESTS_PATH]))
@@ -20,32 +25,32 @@ class Reporter:
         Initializes the Reporter instance with a DataContainer.
 
         Args:
-            data_container (DataContainer): An instance of DataContainer that offers the report data 
-                                           and template specifications.
+            data_container (DataContainer): An instance of DataContainer that offers the report data
+                and template specifications.
         """
         # Store all test specification data sourced from the DataContainer
-        self.test_specs: dict = data_container.test_specs_and_results["test_specs"]
+        self.test_specs: dict[str, Any] = data_container.test_specs_and_results["test_specs"]
 
         # Store all test results sourced from the DataContainer
-        self.test_results: dict = data_container.test_specs_and_results["test_results"]
+        self.test_results: dict[str, Any] = data_container.test_specs_and_results["test_results"]
 
         # Store test name sourced from test specifications
         self.test_name: str = self.test_specs["name"]
-        
+
         # Store the report template name sourced from test specifications
         self.report_name: str = self.test_specs["report"]
-        
+
         # Store the specified HTML template for the report via Jinja2
         self.report_template = jinja_env.get_template(str(Path(self.test_name) / f"{self.report_name}.html"))
 
-    
+
     def generate_report(self, assessment_date: str, split_reports: bool) -> None:
         """
         Generates PDF reports by rendering HTML templates with the provided data and saves them as files.
 
         This method supports:
         1. Generating individual PDF reports for each test result if `split_reports` is True.
-        2. Generating batched consolidated PDF reports if `split_reports` is False, to improve 
+        2. Generating batched consolidated PDF reports if `split_reports` is False, to improve
         performance and handle data in manageable chunks.
 
         Process:
@@ -59,10 +64,10 @@ class Reporter:
 
         Args:
             assessment_date (str): The date of the assessment to include in the report.
-            split_reports (bool): 
-                - True: Generates a separate PDF report for each test result, with a detailed naming pattern 
+            split_reports (bool):
+                - True: Generates a separate PDF report for each test result, with a detailed naming pattern
                         that includes batch and report-specific details.
-                - False: Groups test results into batches for combined PDF reports, with each file 
+                - False: Groups test results into batches for combined PDF reports, with each file
                         containing reports of a single batch.
 
         File Output:
@@ -80,8 +85,8 @@ class Reporter:
                 - `batch_index`: The batch number (padded to 3 digits).
 
         Notes:
-            - The `reports_per_batch` variable defines how many test results are processed in a single batch. 
-            Batch processing improves the performance of the PDF generation process, especially when working 
+            - The `reports_per_batch` variable defines how many test results are processed in a single batch.
+            Batch processing improves the performance of the PDF generation process, especially when working
             with large datasets or computationally intensive tasks.
         """
         # To accumulate HTML content for combined report if `split_data` is False
@@ -91,7 +96,7 @@ class Reporter:
         reports_per_batch = 100
 
         # Create batches of data (PDF generation is heavy)
-        batches = batched(self.test_results, n=reports_per_batch)
+        batches = batched(self.test_results, n=reports_per_batch, strict=False)
 
         # Loop through all bateches
         for batch_index, batch_test_results in enumerate(batches, 1):
@@ -101,7 +106,7 @@ class Reporter:
 
                 # Define global index
                 report_index = f"{str((batch_index-1) * reports_per_batch + batch_report_index).zfill(4)}"
-            
+
                 # Render the HTML template with test specifications, test results, and assessment date
                 rendered_template: str = self.report_template.render(
                     test_specs=self.test_specs,  # Specifications of the test
@@ -111,8 +116,10 @@ class Reporter:
 
                 if split_reports:
                     # Generate individual PDF report for each test result
-                    output_filepath: Path = XEROX_PATH / f"{self.test_name}-{report_index}-{test_results['subject_id']}.pdf"
-                    
+                    subject_id: str = test_results["subject_id"] # type: ignore[index]
+                    filename: str = f"{self.test_name}-{report_index}-{subject_id}.pdf"
+                    output_filepath: Path = XEROX_PATH / filename
+
                     # Persist the rendered HTML as a PDF file
                     HTML(string=rendered_template).write_pdf(output_filepath)
                 else:
@@ -121,9 +128,9 @@ class Reporter:
 
             if not split_reports:
                 # Save the combined report as a single PDF
-                output_filepath: Path = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(3)}.pdf"
+                output_filepath = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(3)}.pdf"
 
                 # Persist the combined HTML content as a single PDF file
                 HTML(string=reports).write_pdf(output_filepath)
 
-            
+

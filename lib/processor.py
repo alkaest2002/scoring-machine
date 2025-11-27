@@ -1,19 +1,23 @@
-import argparse
+from typing import TYPE_CHECKING
+
 from lib.data_container import DataContainer
-from lib.errors import TracebackNotifier
 from lib.data_provider import DataProvider
+from lib.errors import TracebackNotifier
+from lib.reporter import Reporter
 from lib.sanitizer import Sanitizer
 from lib.scorer import Scorer
 from lib.standardizer import Standardizer
-from lib.reporter import Reporter
+
+if TYPE_CHECKING:
+    import argparse
 
 def process(args: argparse.Namespace) -> None:
     """
     Main function to process test data, compute scores, and generate output.
 
-    This function orchestrates the processing of test data by interacting with various 
-    modules such as DataProvider, DataContainer, Sanitizer, Scorer, Standardizer, and Reporter. 
-    It handles input sanitization, score computation, and renders output in the requested 
+    This function orchestrates the processing of test data by interacting with various
+    modules such as DataProvider, DataContainer, Sanitizer, Scorer, Standardizer, and Reporter.
+    It handles input sanitization, score computation, and renders output in the requested
     format (CSV, JSON, or PDF).
 
     Args:
@@ -25,7 +29,7 @@ def process(args: argparse.Namespace) -> None:
             args.assessment_date (str): Assessment date for inclusion in reports.
 
     Raises:
-        Exception: Handles any unexpected error that may occur during processing and sends 
+        Exception: Handles any unexpected error that may occur during processing and sends
                    traceback notifications using `TracebackNotifier`.
     """
     try:
@@ -36,14 +40,14 @@ def process(args: argparse.Namespace) -> None:
         data_container: DataContainer = DataContainer(data_provider)
 
         # Step 3: Sanitize and validate data using Sanitizer
-        data_container: DataContainer = Sanitizer(data_container).sanitize_data()
+        data_container = Sanitizer(data_container).sanitize_data()
 
         # Step 4: Compute raw scores, corrected raw scores, and mean scores using Scorer
-        data_container: DataContainer = Scorer(data_container).compute_raw_related_scores()
+        data_container = Scorer(data_container).compute_raw_related_scores()
 
         # Step 5: Compute standard scores based on norms if not excluded
         if not args.do_not_compute_standard_scores:
-            data_container: DataContainer = Standardizer(data_container).compute_standard_scores()
+            data_container = Standardizer(data_container).compute_standard_scores()
 
         # Step 6: Branch based on the requested output type
         if args.output_type != "pdf":
@@ -52,13 +56,13 @@ def process(args: argparse.Namespace) -> None:
         else:
             # Generate PDF report(s)
             Reporter(data_container).generate_report(
-                assessment_date=args.assessment_date, 
+                assessment_date=args.assessment_date,
                 split_reports=args.split_reports
             )
 
     except Exception as e:
         # Log the error message for debugging purposes.
-        print(f"Error occurred: {e}")
+        print(f"Error occurred: {e}")  # noqa: T201
 
         # Send notification with traceback details using TracebackNotifier
         TracebackNotifier(e).notify_traceback()

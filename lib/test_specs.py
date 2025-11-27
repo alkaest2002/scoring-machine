@@ -1,6 +1,7 @@
 from functools import reduce
-from typing import Any, Union, List, Literal, Tuple
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_validator
 
 
 class Likert(BaseModel):
@@ -12,7 +13,7 @@ class Likert(BaseModel):
 
     @field_validator("max")
     @classmethod
-    def max_greater_than_min(cls, value: int, info) -> int:
+    def max_greater_than_min(cls, value: int, info: ValidationInfo) -> int:
         """
         Validate that the 'max' value is greater than the 'min' value.
 
@@ -35,7 +36,7 @@ class Norms(BaseModel):
     """
     Represents the configuration of norms and the type of raw score used for norms.
     """
-    available_norms: List[str] = Field(..., description="List containing available norms.")
+    available_norms: list[str] = Field(..., description="List containing available norms.")
     type_of_raw_score: Literal["raw", "raw_corrected", "mean"] = Field(
         ..., description="The type of raw score used for norms (raw, raw_corrected, or mean)."
     )
@@ -48,7 +49,7 @@ class TestSpecsModel(BaseModel):
     name: str = Field(..., description="The name of the test specification.")
     length: int = Field(..., gt=0, description="The number of test items. Must be greater than 0.")
     likert: Likert
-    scales: List[Tuple[str, List[int], List[int]]] = Field(
+    scales: list[tuple[str, list[int], list[int]]] = Field(
         ..., description="List of scales, each defined with a name and two index lists (straight and reversed)."
     )
     norms: Norms
@@ -56,7 +57,9 @@ class TestSpecsModel(BaseModel):
 
     @field_validator("scales")
     @classmethod
-    def validate_scales(cls, scales: List[Tuple[str, List[int], List[int]]], info) -> List[Tuple[str, List[int], List[int]]]:
+    def validate_scales(cls,
+        scales: list[tuple[str, list[int], list[int]]],
+        info: ValidationInfo) -> list[tuple[str, list[int], list[int]]]:
         """
         Validate the 'scales' field for proper formatting and constraints.
 
@@ -103,7 +106,7 @@ class TestSpecs:
     Provides functionality to retrieve nested data using dot-separated JSON paths.
     """
 
-    def __init__(self, data: dict) -> None:
+    def __init__(self, data: dict[str, Any]) -> None:
         """
         Initialize a `TestSpecs` instance with the given test specifications.
 
@@ -119,12 +122,12 @@ class TestSpecs:
 
             # Store the validated test specifications.
             self.test_specs = data
-        
+
         except ValidationError as e:
-            print("Validation Error Occurred!")
+            print("Validation Error Occurred!")  # noqa: T201
             raise e
 
-    def get_spec(self, path: Union[str, None]) -> Any:
+    def get_spec(self, path: str | None) -> Any:
         """
         Retrieve a specific value from the test specifications using a dot-separated JSON path.
 

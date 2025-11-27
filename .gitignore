@@ -6,3 +6,4 @@ pas*
 poms*
 spectra*
 xerox/*.*
+**/__init__.py

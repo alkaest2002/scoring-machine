@@ -74,7 +74,7 @@ class TestSpecsModel(BaseModel):
             ValueError: If any scale contains duplicates, indices exceeding test length, or other constraints.
         """
         # Retrieve the test length for validation.
-        length = info.data.get("length")
+        length: int | None = info.data.get("length")
 
         # Ensure length is provided before validating scales.
         if length is None:
@@ -82,20 +82,25 @@ class TestSpecsModel(BaseModel):
 
         # Validate each scale's structure and constraints.
         for scale in scales:
+
             # Unpack the scale components.
-            scale_name, first_list, second_list = scale
+            scale_name, straight_items, reversed_items = scale
 
             # Check for duplicate indices within the individual lists.
-            if len(first_list) != len(set(first_list)):
+            if len(straight_items) != len(set(straight_items)):
                 raise ValueError(f"Duplicate items found within the first list of scale '{scale_name}'.")
-            if len(second_list) != len(set(second_list)):
+            if len(reversed_items) != len(set(reversed_items)):
                 raise ValueError(f"Duplicate items found within the second list of scale '{scale_name}'.")
 
             # Validate that indices do not exceed the test length.
-            if any(index > length for index in first_list):
+            if any(index > length for index in straight_items):
                 raise ValueError(f"Straight item indices of scale '{scale_name}' exceed the test length: {length}.")
-            if any(index > length for index in second_list):
+            if any(index > length for index in reversed_items):
                 raise ValueError(f"Reversed item indices of scale '{scale_name}' exceed the test length: {length}.")
+
+            # Validate that indices in straight items are not present in reversed items.
+            if set(straight_items).intersection(set(reversed_items)):
+                raise ValueError(f"Scale '{scale_name}' has overlapping indices in straight and reversed items.")
 
         return scales
 
@@ -124,7 +129,6 @@ class TestSpecs:
             self.test_specs = data
 
         except ValidationError as e:
-            print("Validation Error Occurred!")  # noqa: T201
             raise e
 
     def get_spec(self, path: str | None) -> Any:
@@ -144,7 +148,7 @@ class TestSpecs:
             return self.test_specs
 
         # Split the path into individual keys.
-        path_bits = path.split(".")
+        path_bits: list[str] = path.split(".")
 
         # Traverse the nested dictionary and return the appropriate value.
         return reduce(lambda acc, key: acc.get(key, {}), path_bits, self.test_specs)

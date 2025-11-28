@@ -141,7 +141,7 @@ class Standardizer:
             axis=1
         )
 
-        results = []
+        results: list[pd.DataFrame] = []
         for _, group in test_scores_with_norms_id.groupby(["norms_id"], sort=False):
             result = self.compute_standard_scores_for_group(group)
             results.append(result)

@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -26,207 +26,249 @@ class Scorer:
         self.test_specs: TestSpecs = data_container.test_specs
         self.answers: pd.DataFrame = data_container.data_answers
         self.norms_id: pd.Series = data_container.data_norms
-        self.straight_items_by_scale: pd.DataFrame
-        self.reversed_items_by_scale: pd.DataFrame
-        self.straight_items_by_scale, self.reversed_items_by_scale = self.convert_to_matrices()
 
     @cached_property
-    def test_scales(self) -> Any:
+    def test_scales(self) -> list[str]:
         """
         Retrieves the names of the scales defined in the test specifications.
 
         Returns:
-            pd.Index: A Pandas Index of the scale names.
+            list[str]: A list of the scale names.
         """
-        return pd.Index([scale[0] for scale in self.test_specs.get_spec("scales")])
+        return [scale[0] for scale in self.test_specs.get_spec("scales")]
 
     @cached_property
-    def count_items_by_scale(self) -> tuple[pd.Series, pd.Series]:
+    def straight_items_by_scale(self) -> pd.DataFrame:
+        """
+        Binary matrix for straight items by scale.
+
+        Returns:
+            pd.DataFrame: Matrix where each column represents a scale and rows represent items.
+        """
+        return self._convert_to_matrix(item_type="straight")
+
+    @cached_property
+    def reversed_items_by_scale(self) -> pd.DataFrame:
+        """
+        Binary matrix for reversed items by scale.
+
+        Returns:
+            pd.DataFrame: Matrix where each column represents a scale and rows represent items.
+        """
+        return self._convert_to_matrix(item_type="reversed")
+
+    def _convert_to_matrix(self, item_type: str) -> pd.DataFrame:
+        """
+        Maps test specifications' scale and item indices into 0-1 matrices.
+
+        Args:
+            item_type (str): Either "straight" or "reversed"
+
+        Returns:
+            pd.DataFrame: Binary matrix of items by scale.
+        """
+        n_items = self.test_specs.get_spec("length")
+        n_scales = len(self.test_scales)
+
+        # Pre-allocate matrix
+        matrix = np.zeros((n_items, n_scales), dtype=np.int8)
+
+        # Fill matrix
+        item_idx = 1 if item_type == "straight" else 2
+        for scale_idx, scale in enumerate(self.test_specs.get_spec("scales")):
+            # Get items for the specified type
+            items = scale[item_idx]
+            # Check if there are any items
+            if items:
+                # Convert to 0-based indexing
+                items_indices = np.array(items) - 1
+                # Set corresponding positions to 1
+                # (indicating presence of item in scale)
+                matrix[items_indices, scale_idx] = 1
+
+        return pd.DataFrame(matrix, columns=self.test_scales)
+
+    @cached_property
+    def count_items_by_scale(self) -> pd.DataFrame:
         """
         Counts the number of straight and reversed items for each scale.
 
         Returns:
-            tuple[pd.Series, pd.Series]:
-                - Count of straight items per scale.
-                - Count of reversed items per scale.
+            pd.DataFrame: DataFrame with 'straight' and 'reversed' rows, scales as columns.
         """
-        return self.straight_items_by_scale.sum(), self.reversed_items_by_scale.sum()
+        counts = np.vstack([
+            self.straight_items_by_scale.values.sum(axis=0),
+            self.reversed_items_by_scale.values.sum(axis=0)
+        ])
+        return pd.DataFrame(
+            counts,
+            index=["straight", "reversed"],
+            columns=self.test_scales
+        )
 
     @cached_property
-    def missing_items_by_scale(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def missing_items_by_scale(self) -> pd.DataFrame:
         """
-        Calculates the number of missing items for straight and reversed items in each scale.
+        Calculates the number of missing items for straight and reversed items in each scale for each person.
 
         Returns:
-            tuple[pd.DataFrame, pd.DataFrame]:
-                - Missing items for straight items by scale.
-                - Missing items for reversed items by scale.
+            pd.DataFrame: DataFrame with scales as columns and MultiIndex ['straight', 'reversed'] showing missing counts.
         """
-        # Filter answers by scale items
-        lambda_fn = lambda x: self.answers.T.loc[x.astype(bool).values].isna().sum()  # noqa: E731
+        # Vectorized computation using numpy @ operator
+        answers_isna = self.answers.isna().values  # (n_persons, n_items)
 
-        # Calculate missing for straight items
-        missing_straight = self.straight_items_by_scale.apply(lambda_fn)
+        # Matrix multiplication: (n_persons, n_items) @ (n_items, n_scales)
+        missing_straight = answers_isna @ self.straight_items_by_scale.values  # (n_persons, n_scales)
+        missing_reversed = answers_isna @ self.reversed_items_by_scale.values  # (n_persons, n_scales)
 
-        # Calculate missing for reversed items
-        missing_reversed = self.reversed_items_by_scale.apply(lambda_fn)
+        # Concatenate as separate columns with prefixes
+        # The resulting DataFrame will have a MultiIndex for columns
+        # Like: ('straight', scale1), ('straight', scale2), ... ('reversed', scale1), ('reversed', scale2), ...
+        return pd.concat([
+            pd.DataFrame(missing_straight, index=self.answers.index, columns=self.test_scales),
+            pd.DataFrame(missing_reversed, index=self.answers.index, columns=self.test_scales)
+        ], keys=['straight', 'reversed'], axis=1)
 
-        # Return missing items (straight and reversed)
-        return missing_straight, missing_reversed
-
-    def convert_to_matrices(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+    @cached_property
+    def missing_by_scale(self) -> pd.DataFrame:
         """
-        Maps test specifications' scale and item indices into 0-1 matrices for straight and reversed items.
-        i.e.: 1,5,10 -> 1,0,0,0,1,0,0,0,0,1
-        This is done for each scale defined in the test specifications.
-        The resulting matrices are used for further calculations of raw scores.
-        The function also handles the conversion of item indices from 1-based to 0-based indexing.
-
-        Args:
-            None
+        Total missing items by scale (straight + reversed) for each person.
 
         Returns:
-            Tuple[pd.DataFrame, pd.DataFrame]:
-                - Matrix for straight items by scale.
-                - Matrix for reversed items by scale.
+            pd.DataFrame: Total missing items per person per scale.
         """
-        # Matrix to store straight items and reversed items
-        straight_items_matrix = pd.DataFrame()
-        reversed_items_matrix = pd.DataFrame()
+        answers_isna = self.answers.isna().values
+        total_items_matrix = self.straight_items_by_scale.values + self.reversed_items_by_scale.values
+        total_missing = answers_isna @ total_items_matrix
 
-        # Iterate through scales defined in test specifications
-        for scale in self.test_specs.get_spec("scales"):
-            # Unpack the scale components
-            scale_label, straight_items, reversed_items = scale
-            for matrix, items in [(straight_items_matrix, straight_items),
-                                   (reversed_items_matrix, reversed_items)]:
-                # Initialize matrix with zeros and set the length based on test specifications
-                items_series = pd.Series(np.zeros(self.test_specs.get_spec("length")))
-                # Convert items position to a matrix of 0s and 1s (e.g., 1,4,5 ->  1,0,0,1,1)
-                items_indices = pd.Series(items).sub(1)
-                # Set the items in the series to 1
-                items_series[items_indices] = 1
-                # Assign the series to the corresponding scale in the matrix
-                matrix[scale_label] = items_series
+        return pd.DataFrame(
+            total_missing,
+            index=self.answers.index,
+            columns=self.test_scales
+        ).astype(int)
 
-        # Return converted matrices
-        return straight_items_matrix, reversed_items_matrix
-
-    def compute_raw_score_component(self, items_by_scale: pd.DataFrame, fillna_value: int) -> pd.DataFrame:
+    @cached_property
+    def raw_scores_straight(self) -> pd.DataFrame:
         """
-        Computes raw scores for a given type (straight or reversed) using matrix multiplication.
-
-        Args:
-            items_by_scale (pd.DataFrame): Binary matrix of items per scale.
-            fillna_value (int): Value to use for filling missing data before computation.
+        Computes raw scores for straight items.
 
         Returns:
-            pd.DataFrame: DataFrame of raw scores for the given type of items.
+            pd.DataFrame: Raw scores for straight items (persons x scales).
         """
-        # Compute raw scores through the dot product
-        raw_scores = np.dot(
-            self.answers.fillna(fillna_value).sub(fillna_value).abs(),
-            items_by_scale
-        )
-
-        # Wrap results in a DataFrame for clarity and indexing
+        # Fill NaN with 0, then matrix multiply
+        raw_scores = self.answers.fillna(0).values @ self.straight_items_by_scale.values
         return pd.DataFrame(raw_scores, index=self.answers.index, columns=self.test_scales)
 
-    def compute_raw_scores(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+    @cached_property
+    def raw_scores_reversed(self) -> pd.DataFrame:
         """
-        Computes raw scores for both straight and reversed items.
+        Computes raw scores for reversed items.
 
         Returns:
-            tuple[pd.DataFrame, pd.DataFrame]:
-                - Raw scores for straight items.
-                - Raw scores for reversed items.
+            pd.DataFrame: Raw scores for reversed items (persons x scales).
         """
-        # Raw scores for straight items
-        straight_scores = self.compute_raw_score_component(self.straight_items_by_scale, 0)
+        # Maximum possible score for likert scale
+        likert_sum = sum(self.test_specs.get_spec("likert").values())
 
-        # Raw scores for reversed items
-        reversed_scores = self.compute_raw_score_component(
-            self.reversed_items_by_scale,
-            sum(self.test_specs.get_spec("likert").values())
+        # Reverse scoring: |likert_sum - answer|
+        raw_scores = (
+            self.answers.fillna(likert_sum)
+                .rsub(likert_sum).values @ self.reversed_items_by_scale.values
         )
 
-        # Return straight and reversed scores
-        return straight_scores, reversed_scores
+        return pd.DataFrame(raw_scores, index=self.answers.index, columns=self.test_scales)
 
-    def compute_raw_corrected_mean_scores(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    @cached_property
+    def raw_scores(self) -> pd.DataFrame:
         """
-        Computes and returns raw, corrected raw, and mean scores across all test scales.
+        Computes total raw scores (straight + reversed).
 
         Returns:
-            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-                - Raw scores: Sum of straight and reversed scores.
-                - raw corrected scores: Scores adjusted based on the number of answered items.
-                - Mean scores: Raw scores divided by the number of answered items.
+            pd.DataFrame: Total raw scores per person per scale.
+        """
+        return (self.raw_scores_straight + self.raw_scores_reversed).astype(np.float64)
+
+    @cached_property
+    def raw_corrected_scores(self) -> pd.DataFrame:
+        """
+        Computes raw corrected scores adjusted for missing items.
+
+        Returns:
+            pd.DataFrame: Raw corrected scores per scale.
         """
         with np.errstate(divide="ignore", invalid="ignore"):
-            # Get counts items by scale
-            count_items_straight, count_items_reversed = self.count_items_by_scale
+            # Get counts and missing items
+            counts = self.count_items_by_scale
+            missing = self.missing_items_by_scale
 
-            # Get missing items by scale
-            missing_straight, missing_reversed = self.missing_items_by_scale
+            # Compute for straight items
+            items_answered_straight = counts.loc["straight"].values - missing["straight"].values.astype(float)
+            mean_straight = self.raw_scores_straight.values / items_answered_straight
+            corrected_straight = np.nan_to_num(mean_straight) * counts.loc["straight"].values
 
-            # Compute raw scores
-            raw_straight, raw_reversed = self.compute_raw_scores()
+            # Compute for reversed items
+            items_answered_reversed = counts.loc["reversed"].values - missing["reversed"].values.astype(float)
+            mean_reversed = self.raw_scores_reversed.values / items_answered_reversed
+            corrected_reversed = np.nan_to_num(mean_reversed) * counts.loc["reversed"].values
 
-            # Compute raw corrected scores per component (straight/reversed)
-            raw_corrected_components = []
-            for raw, missing, count in [
-                (raw_straight, missing_straight, count_items_straight),
-                (raw_reversed, missing_reversed, count_items_reversed)
-            ]:
-                items_answered = count - missing  # Number of answered items
-                mean_scores = np.true_divide(raw, items_answered)  # Compute means
-                raw_corrected_scores = np.nan_to_num(mean_scores) * count.values  # Adjusted raw scores
-                raw_corrected_components.append(raw_corrected_scores)
+            # Sum components
+            raw_corrected = corrected_straight + corrected_reversed
 
-            # Calculate final raw corrected scores
-            raw_corrected_scores = pd.DataFrame(
-                sum(raw_corrected_components),
+            return pd.DataFrame(
+                raw_corrected,
                 index=self.answers.index,
                 columns=self.test_scales
-            )
+            ).astype(np.float64)
 
-            # Calculate mean scores
-            mean_scores = (raw_straight + raw_reversed).div(
-                count_items_straight + count_items_reversed - missing_straight - missing_reversed
-            )
+    @cached_property
+    def mean_scores(self) -> pd.DataFrame:
+        """
+        Computes mean scores per scale.
 
-            # Return all scores
-            return \
-                (raw_straight + raw_reversed).astype(int).astype(np.float64), \
-                raw_corrected_scores.astype(int).astype(np.float64), \
-                mean_scores.round(2).astype(np.float64)
+        Returns:
+            pd.DataFrame: Mean scores per scale.
+        """
+        with np.errstate(divide="ignore", invalid="ignore"):
+            # Total items answered per scale
+            total_items = self.count_items_by_scale.sum(axis=0).values
+            total_missing = self.missing_by_scale.values
+            items_answered = total_items - total_missing
+
+            # Compute mean
+            mean = self.raw_scores.values / items_answered
+
+            return pd.DataFrame(
+                np.round(mean, 2),
+                index=self.answers.index,
+                columns=self.test_scales
+            ).astype(np.float64)
+
+    @cached_property
+    def test_scores(self) -> pd.DataFrame:
+        """
+        Computes all test scores (raw, corrected, mean) combined with norms and missing data.
+
+        Returns:
+            pd.DataFrame: Combined DataFrame with all scoring information.
+        """
+        # Combine all scores
+        return pd.concat([
+            self.norms_id,
+            self.missing_by_scale.add_prefix("missing__"),
+            self.raw_scores.astype(int).add_prefix("raw__"),
+            self.raw_corrected_scores.astype(int).add_prefix("raw_corrected__"),
+            self.mean_scores.add_prefix("mean__"),
+        ], axis=1)
 
     def compute_raw_related_scores(self) -> DataContainer:
         """
-        Computes all test scores (raw, corrected, mean) and adds them to the DataContainer.
+        Computes all test scores and adds them to the DataContainer.
 
         Returns:
-            DataContainer: Updated DataContainer instance with combined scores and missing item statistics.
+            DataContainer: Updated DataContainer instance with combined scores.
         """
-        # Calculate missing items
-        missing_straight, missing_reversed = self.missing_items_by_scale
-        missing_by_scale = missing_straight.add(missing_reversed)
-
-        # Calculate raw related scores
-        raw_scores, raw_corrected_scores, mean_scores = self.compute_raw_corrected_mean_scores()
-
-        # Combine norms_id and scores into a single DataFrame
-        test_scores = pd.concat([
-            self.norms_id,
-            missing_by_scale.add_prefix("missing__"),
-            raw_scores.add_prefix("raw__"),
-            raw_corrected_scores.add_prefix("raw_corrected__"),
-            mean_scores.add_prefix("mean__"),
-        ], axis=1)
-
-        # Update data_container with the new scores
-        self.data_container.test_scores = pd.concat([self.data_container.test_scores, test_scores])
+        # Update data_container with the test scores (uses cached property)
+        self.data_container.test_scores = self.test_scores
 
         # Return updated data_container
         return self.data_container

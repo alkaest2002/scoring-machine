@@ -91,10 +91,11 @@ class Standardizer:
         # Parse the norms ID string into a list of applicable norms IDs
         norms_list: list[str] = group_norms_id.split(" ")
 
+        # Get all norms
+        all_norms: pd.DataFrame = self.data_container.test_norms
+
         # Extract relevant norms data based on the parsed norms IDs
-        test_norms: pd.DataFrame = (
-            self.data_container.test_norms[self.data_container.test_norms["norms_id"].isin(norms_list)]
-        )
+        test_norms: pd.DataFrame = all_norms[all_norms["norms_id"].isin(norms_list)]
 
         # Identify relevant columns for standardized scores and interpretations
         relevant_columns: list[str] = [col for col in ["std", "std_interpretation"] if col in test_norms.columns]

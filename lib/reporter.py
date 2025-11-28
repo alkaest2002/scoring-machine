@@ -93,12 +93,12 @@ class Reporter:
         reports: str = ""
 
         # Define how many reports to process per batch
-        reports_per_batch = 100
+        reports_per_batch: int = 100
 
         # Create batches of data (PDF generation is heavy)
-        batches = batched(self.test_results, n=reports_per_batch, strict=False)
+        batches: batched[str] = batched(self.test_results, n=reports_per_batch, strict=False)
 
-        # Loop through all bateches
+        # Loop through all batches
         for batch_index, batch_test_results in enumerate(batches, 1):
 
             # Loop through test results in current batch

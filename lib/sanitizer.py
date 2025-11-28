@@ -44,12 +44,14 @@ class Sanitizer:
         )
 
         # Replace invalid entries with the `UNAVAILABLE_NORMS` constant
-        final_norms: pd.Series = self.data_container.data_norms.where(condition, UNAVAILABLE_NORMS)
+        # And sort multiple norms alphabetically for consistency
+        # And for avoiding grouping issues later on
+        final_norms: pd.Series = (
+            self.data_container.data_norms
+                .where(condition, UNAVAILABLE_NORMS)
+                .apply(lambda x: " ".join(sorted(x.split(" "))))
+        )
 
-        # Sort multiple norms_id
-        final_norms = final_norms.apply(lambda x: " ".join(sorted(x.split(" "))))
-
-        # Return final norms sorted
         return final_norms
 
     def sanitize_test_answers(self) -> pd.DataFrame | pd.Series:
@@ -61,13 +63,14 @@ class Sanitizer:
             Union[pd.DataFrame, pd.Series]: A DataFrame or Series with cleaned item answers.
         """
         # Convert values to numeric and clip them to the specified Likert scale range
+        # Errors during conversion are coerced to NaN
         return (
             self.data_container.data_answers
-            .apply(lambda x: pd.to_numeric(x, errors="coerce", downcast="integer"))
-            .clip(
-                self.data_container.test_specs.get_spec("likert.min"),
-                self.data_container.test_specs.get_spec("likert.max")
-            )
+                .apply(lambda x: pd.to_numeric(x, errors="coerce", downcast="integer"))
+                .clip(
+                    self.data_container.test_specs.get_spec("likert.min"),
+                    self.data_container.test_specs.get_spec("likert.max")
+                )
         )
 
     def sanitize_data(self) -> DataContainer:
@@ -100,7 +103,7 @@ class Sanitizer:
         # Raise a ValidationError if requested columns do not match the DataFrame columns
         if sym_dif.shape[0] > 0:
             raise ValidationError("Test data is not compatible with test specifications. "
-                                  f"Missing or unexpected columns: {list(sym_dif)}")
+                f"Missing or unexpected columns: {list(sym_dif)}")
 
         # Sanitize and combine "subject_id" column, sanitized norms, and sanitized answers
         sanitized_data: pd.DataFrame = pd.concat([
@@ -112,5 +115,4 @@ class Sanitizer:
         # Update the data_container with the validated and sanitized data
         self.data_container.data = sanitized_data
 
-        # Return the updated DataContainer instance
         return self.data_container

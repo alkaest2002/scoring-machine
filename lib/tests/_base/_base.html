@@ -25,15 +25,15 @@
         <td>{{ scale_name }}</td>
         <td class="score">{{ (test_specs.scales[idx][1] | length) + (test_specs.scales[idx][2] | length) }}</td>
         <td class="score">{{ test_results["missing__" +scale_code] }}</td>
-        <td class="score">{{ test_results["raw__" +scale_code] }}</td>
-        <td class="score">{{ test_results["raw_corrected__" +scale_code] }}</td>
-        <td class="score">{{ test_results["mean__" +scale_code] }}</td>
+        <td class="score">{{ test_results["raw__" +scale_code] | int }}</td>
+        <td class="score">{{ test_results["raw_corrected__" +scale_code] | round(1) }}</td>
+        <td class="score">{{ test_results["mean__" +scale_code] | round(1) }}</td>
         <td class="score">
-            {% set std_raw_label = "std_raw__" + scale_code %}
+            {% set std_raw_label = "std__raw__" + scale_code %}
             {% if std_raw_label in test_results  %}
                 {% set standard_scores_obj = test_results["std__raw__" + scale_code] %}
             {% endif %}
-            {% set std_raw_label = "std_raw_corrected__" + scale_code %}
+            {% set std_raw_label = "std__raw_corrected__" + scale_code %}
             {% if std_raw_label in test_results   %}
                 {% set standard_scores_obj = test_results["std__raw_corrected__" + scale_code] %}
             {% endif %}
@@ -64,7 +64,7 @@
 {% if n_legend %}
     <div class="table-apa-footer">
         <p>
-            ST Nr item RO Omesse &nbsp; PG Grezzo &nbsp; PC Corretto &nbsp; PM Medio &nbsp; PS Standardizzato
+            ST Numero item &nbsp; RO Omesse &nbsp; PG Grezzo &nbsp; PC Corretto &nbsp; PM Medio &nbsp; PS Standardizzato
         </p>
         {% if n_legend == 7 %}
         <p>

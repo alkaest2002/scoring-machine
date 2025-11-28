@@ -1,7 +1,7 @@
-import json
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+import orjson
 import pandas as pd
 
 from lib import BASE_PATH, DATA_PATH, LIB_PATH, TESTS_PATH, XEROX_PATH
@@ -9,6 +9,7 @@ from lib.errors import NotFoundError
 
 if TYPE_CHECKING:
     from pathlib import Path
+
 
 class DataProvider:
     """
@@ -42,21 +43,27 @@ class DataProvider:
             NotFoundError: If any required folder paths are missing.
         """
         base_folderpaths = {
-            "cwd": BASE_PATH,     # Current working directory
-            "data": DATA_PATH,    # Path to the data directory
+            "cwd": BASE_PATH,  # Current working directory
+            "data": DATA_PATH,  # Path to the data directory
             "xerox": XEROX_PATH,  # Path to the Xerox directory
-            "lib": LIB_PATH,      # Path to the library directory
-            "tests": TESTS_PATH   # Path to the tests directory
+            "lib": LIB_PATH,  # Path to the library directory
+            "tests": TESTS_PATH,  # Path to the tests directory
         }
 
         # Ensures that all defined folder paths exist
         if all(folder.exists() for folder in base_folderpaths.values()):
             return base_folderpaths
         else:
-            missing_paths = [str(folder) for folder in base_folderpaths.values() if not folder.exists()]
+            missing_paths = [
+                str(folder)
+                for folder in base_folderpaths.values()
+                if not folder.exists()
+            ]
             raise NotFoundError(f"The following paths are missing: {missing_paths}")
 
-    def get_folderpath(self, folderpath: Literal["cwd", "data", "xerox", "lib", "tests"]) -> Path:
+    def get_folderpath(
+        self, folderpath: Literal["cwd", "data", "xerox", "lib", "tests"]
+    ) -> Path:
         """
         Retrieves the path of a specified folder.
 
@@ -85,9 +92,17 @@ class DataProvider:
         if type == "data":
             filepath = self.get_folderpath("data") / f"{self.test_name}_data.csv"
         elif type == "norms":
-            filepath = self.get_folderpath("tests") / self.test_name / f"{self.test_name}_norms.csv"
+            filepath = (
+                self.get_folderpath("tests")
+                / self.test_name
+                / f"{self.test_name}_norms.csv"
+            )
         else:
-            filepath = self.get_folderpath("tests") / self.test_name / f"{self.test_name}_specs.json"
+            filepath = (
+                self.get_folderpath("tests")
+                / self.test_name
+                / f"{self.test_name}_specs.json"
+            )
 
         return filepath.relative_to(BASE_PATH)
 
@@ -105,7 +120,7 @@ class DataProvider:
         # Read max 1000 rows
         return pd.read_csv(data_filepath, nrows=1000)
 
-    def load_test_specifications(self) ->Any:
+    def load_test_specifications(self) -> Any:
         """
         Loads test-specific specifications from a JSON file.
 
@@ -117,8 +132,8 @@ class DataProvider:
         """
         test_specs_filepath = self.get_test_path("specs")
 
-        with test_specs_filepath.open() as file:
-            test_specs_json = json.load(file)
+        with test_specs_filepath.open("rb") as file:
+            test_specs_json = orjson.loads(file.read())
 
         return test_specs_json
 
@@ -133,17 +148,23 @@ class DataProvider:
         norms_filepath = self.get_test_path("norms")
 
         if norms_filepath.exists():
-            return pd.read_csv(norms_filepath, dtype={"raw": np.float64, "std": np.float64})
+            return pd.read_csv(
+                norms_filepath, dtype={"raw": np.float64, "std": np.float64}
+            )
         else:
             return pd.DataFrame()
 
     def persist(self, data: pd.DataFrame | dict[str, Any]) -> None:
-
         # If data is an instance of pd.Dataframe, save it as a csv
         if isinstance(data, pd.DataFrame):
-            data.to_csv(self.get_folderpath("xerox") / f"{self.test_name}_scored.csv", index=False)
+            data.to_csv(
+                self.get_folderpath("xerox") / f"{self.test_name}_scored.csv",
+                index=False,
+            )
 
         # If data is a dict, save it as a json
         elif isinstance(data, dict):
-            with (self.get_folderpath("xerox") / f"{self.test_name}_scored.json").open("w") as fout:
-                json.dump(data, fout, indent=2)
+            with (self.get_folderpath("xerox") / f"{self.test_name}_scored.json").open(
+                "wb"
+            ) as fout:
+                fout.write(orjson.dumps(data, option=orjson.OPT_INDENT_2))

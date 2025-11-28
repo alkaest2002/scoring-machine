@@ -148,7 +148,7 @@ class Standardizer:
 
         self.data_container.test_standard_scores = (
             pd.concat(results)
-            .add_prefix("std_")
+            .add_prefix("std__")
             .sort_index()
         )
 

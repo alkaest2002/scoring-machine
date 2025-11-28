@@ -47,7 +47,7 @@ def expand_dict_like_columns(df: pd.DataFrame, regex_for_dict_like: str) -> pd.D
     return final_df
 
 
-def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame, type: str) -> pd.DataFrame:
+def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame) -> pd.DataFrame:
     """
     Creates a normative table for psychological scales based on test specifications
     and normative data. The resulting table includes raw scores and corresponding
@@ -60,7 +60,6 @@ def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame, type
         norms_data (pd.DataFrame): A DataFrame containing the normative data for the scales.
                                    This must include scale names, mean scores, standard
                                    deviations ('ds'), and a unique norms ID for each entry.
-        type (str): Specifies the type of normative table (raw, raw_corrected or mean).
 
     Returns:
         pd.DataFrame: A DataFrame containing the normative T-scores table with the following columns:
@@ -74,6 +73,9 @@ def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame, type
 
     # Get the maximum Likert-scale value from test specifications.
     likert_max: int = test_specs.get_spec("likert.max")
+
+    # Get type of raw score
+    type_of_raw_score: str = test_specs.get_spec("norms.type_of_raw_score")
 
     # Iterate over norms_id
     for norms_id in norms_data["norms_id"].unique():
@@ -96,9 +98,8 @@ def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame, type
 
             # Calculate the total number of items in the scale.
             scale_length: int = len([*items_straight, *items_reversed])
-
             # Generate the range of raw scores depending on the specified type.
-            if type == "mean":
+            if type_of_raw_score == "mean":
                 # Raw scores are generated with steps of 0.05 if type is 'mean'.
                 scale_raw_scores: pd.Series[Any] = pd.Series(np.arange(0, likert_max + 0.05, 0.05)).round(2)
             else:
@@ -111,12 +112,12 @@ def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame, type
                 "scale": scale_name,                                # Scale name.
                 "raw": scale_raw_scores,                            # Raw scores.
                 "std": scale_raw_scores
-                    .sub(scale_mean)                               # Subtract the mean.
-                    .div(scale_ds)                                 # Divide by the standard deviation.
-                    .mul(10)                                       # Multiply by 10 to calculate T-scores.
-                    .add(50)                                       # Add 50 to adjust to T-score range.
-                    .clip(0, 200)                                  # Clip values between 0 and 150.
-                    .astype(int),                                  # Convert T-scores to integers.
+                        .sub(scale_mean)                               # Subtract the mean.
+                        .div(scale_ds)                                 # Divide by the standard deviation.
+                        .mul(10)                                       # Multiply by 10 to calculate T-scores.
+                        .add(50)                                       # Add 50 to adjust to T-score range.
+                        .clip(0, 200)                                 # Clip values between 0 and 200
+                        .astype(int),                                  # Convert T-scores to integers.
                 "std_interpretation": "◦"                          # Placeholder for interpretation.
             })
 

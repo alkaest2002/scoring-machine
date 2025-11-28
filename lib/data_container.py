@@ -123,7 +123,7 @@ class DataContainer:
 
             # Expand dictionary-like columns if requested
             data_to_persist_csv_expanded: pd.DataFrame =\
-                expand_dict_like_columns(data_to_persist_csv, regex_for_dict_like="std_)")
+                expand_dict_like_columns(data_to_persist_csv, regex_for_dict_like="std__")
 
             self.data_provider.persist(data_to_persist_csv_expanded)
 

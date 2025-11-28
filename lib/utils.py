@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
     from lib.test_specs import TestSpecs
 
 
@@ -22,18 +24,21 @@ def expand_dict_like_columns(df: pd.DataFrame, regex_for_dict_like: str) -> pd.D
                       The names of the expanded columns are prefixed with the original column name.
     """
     # Identify dict-like columns in the DataFrame based on the provided regex pattern.
-    dict_like_columns = df.filter(regex=regex_for_dict_like)
+    dict_like_columns: pd.DataFrame = df.filter(regex=regex_for_dict_like)
 
     # Extract all non-dict-like columns by excluding dict-like ones.
-    df_except_dictlike = df.loc[:, ~(df.columns.isin(dict_like_columns.columns))]
+    df_except_dictlike: pd.DataFrame = df.loc[:, ~(df.columns.isin(dict_like_columns.columns))]
 
     # Initialize the final DataFrame starting with non-dict-like columns.
-    final_df = df_except_dictlike
+    final_df: pd.DataFrame = df_except_dictlike
 
     # Iterate over the identified dict-like columns to expand their contents.
     for col_dict_name, col_dict in dict_like_columns.items():
         # Expand each dict-like column using `pd.json_normalize` and add a prefix for clarity.
-        expanded_column = pd.json_normalize(col_dict, meta_prefix=True).add_prefix(f"{col_dict_name}.")  # type: ignore
+        expanded_column: pd.DataFrame = (
+            pd.json_normalize(col_dict, meta_prefix="_") # type: ignore[arg-type]
+                .add_prefix(f"{col_dict_name}.")
+        )
 
         # Concatenate the expanded columns into the final DataFrame.
         final_df = pd.concat([final_df, expanded_column], axis=1)
@@ -65,10 +70,10 @@ def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame, type
                       - 'std': The standardized T-scores (scaled between 0 and 150).
     """
     # Initialize an empty DataFrame to store the normative table.
-    norms_table = pd.DataFrame()
+    norms_table: pd.DataFrame = pd.DataFrame()
 
     # Get the maximum Likert-scale value from test specifications.
-    likert_max = test_specs.get_spec("likert.max")
+    likert_max: int = test_specs.get_spec("likert.max")
 
     # Iterate over norms_id
     for norms_id in norms_data["norms_id"].unique():
@@ -77,20 +82,20 @@ def create_normative_table(test_specs: TestSpecs, norms_data: pd.DataFrame, type
         for scale_name, items_straight, items_reversed in test_specs.get_spec("scales"):
 
             # Filter the norms data for the current scale and norms_id.
-            condition = np.logical_and(
-                 norms_data["norms_id"].eq(norms_id),
-                 norms_data["scale"].eq(scale_name)
+            condition: NDArray[np.bool_] = np.logical_and(
+                norms_data["norms_id"].eq(norms_id),
+                norms_data["scale"].eq(scale_name)
             )
 
             # Filter the norms data for the current scale.
-            scale_norms_data = norms_data[condition]
+            scale_norms_data: pd.DataFrame = norms_data[condition]
 
             # Extract the mean and standard deviation ('ds') for the current scale.
-            scale_mean = scale_norms_data["mean"].iloc[0]
-            scale_ds = scale_norms_data["ds"].iloc[0]
+            scale_mean: float = scale_norms_data["mean"].iloc[0]
+            scale_ds: float = scale_norms_data["ds"].iloc[0]
 
             # Calculate the total number of items in the scale.
-            scale_length = len([*items_straight, *items_reversed])
+            scale_length: int = len([*items_straight, *items_reversed])
 
             # Generate the range of raw scores depending on the specified type.
             if type == "mean":

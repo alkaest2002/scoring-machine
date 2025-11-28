@@ -1,4 +1,3 @@
-import json
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -107,7 +106,7 @@ class DataContainer:
         """
         return {
             "test_specs": self.test_specs.get_spec(None),
-            "test_results": json.loads(self.results.replace({np.nan: None}).to_json(orient="records"))
+            "test_results": self.results.replace({np.nan: None}).to_dict(orient="records")
         }
 
     def persist(self, type: Literal["csv", "json"]) -> None:

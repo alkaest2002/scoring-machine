@@ -28,7 +28,7 @@ class DataProvider:
             test_name (str): The name of the test.
             base_folderpaths (dict[str, Path]): A dictionary mapping folder names to their corresponding `Path` objects.
         """
-        self.test_name = test_name
+        self.test_name: str = test_name
         self.base_folderpaths: dict[str, Path] = self.set_base_folderpaths()
 
     def set_base_folderpaths(self) -> dict[str, Path]:
@@ -116,9 +116,13 @@ class DataProvider:
         Raises:
             FileNotFoundError: If the data file does not exist.
         """
-        data_filepath = self.get_test_path("data")
-        # Read max 1000 rows
-        return pd.read_csv(data_filepath, nrows=1000)
+        # Get the path to the test data file
+        data_filepath: Path = self.get_test_path("data")
+
+        # Load a maximum of 1000 rows
+        limited_df: pd.DataFrame = pd.read_csv(data_filepath, nrows=1000)
+
+        return limited_df
 
     def load_test_specifications(self) -> Any:
         """
@@ -130,8 +134,10 @@ class DataProvider:
         Raises:
             FileNotFoundError: If the specification file does not exist.
         """
-        test_specs_filepath = self.get_test_path("specs")
+        # Get the path to the test specs
+        test_specs_filepath: Path = self.get_test_path("specs")
 
+        # Parse test specs
         with test_specs_filepath.open("rb") as file:
             test_specs_json = orjson.loads(file.read())
 
@@ -145,13 +151,16 @@ class DataProvider:
             pd.DataFrame: A DataFrame containing the norms data.
                           If the file does not exist, returns an empty DataFrame.
         """
-        norms_filepath = self.get_test_path("norms")
+        # Get path to norms
+        norms_filepath: Path = self.get_test_path("norms")
 
+        # Read norms if they exist
         if norms_filepath.exists():
             return pd.read_csv(
                 norms_filepath, dtype={"raw": np.float64, "std": np.float64}
             )
         else:
+            # Retrun void DataFrame
             return pd.DataFrame()
 
     def persist(self, data: pd.DataFrame | dict[str, Any]) -> None:

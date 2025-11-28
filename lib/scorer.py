@@ -192,33 +192,22 @@ class Scorer:
     def raw_corrected_scores(self) -> pd.DataFrame:
         """
         Computes raw corrected scores adjusted for missing items.
+        Raw corrected score = mean score x number of items per scale
 
         Returns:
             pd.DataFrame: Raw corrected scores per scale.
         """
-        with np.errstate(divide="ignore", invalid="ignore"):
-            # Get counts and missing items
-            counts = self.count_items_by_scale
-            missing = self.missing_items_by_scale
+        # Total number of items per scale (straight + reversed)
+        total_items_per_scale = self.count_items_by_scale.sum(axis=0).values
 
-            # Compute for straight items
-            items_answered_straight = counts.loc["straight"].values - missing["straight"].values.astype(float)
-            mean_straight = self.raw_scores_straight.values / items_answered_straight
-            corrected_straight = np.nan_to_num(mean_straight) * counts.loc["straight"].values
+        # Raw corrected = mean score x total items in scale
+        raw_corrected = self.mean_scores.values * total_items_per_scale
 
-            # Compute for reversed items
-            items_answered_reversed = counts.loc["reversed"].values - missing["reversed"].values.astype(float)
-            mean_reversed = self.raw_scores_reversed.values / items_answered_reversed
-            corrected_reversed = np.nan_to_num(mean_reversed) * counts.loc["reversed"].values
-
-            # Sum components
-            raw_corrected = corrected_straight + corrected_reversed
-
-            return pd.DataFrame(
-                raw_corrected,
-                index=self.answers.index,
-                columns=self.test_scales
-            ).astype(np.float64)
+        return pd.DataFrame(
+            raw_corrected,
+            index=self.answers.index,
+            columns=self.test_scales
+        ).astype(np.float64)
 
     @cached_property
     def mean_scores(self) -> pd.DataFrame:

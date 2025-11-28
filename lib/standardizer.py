@@ -108,8 +108,12 @@ class Standardizer:
         ).reset_index()
 
         # Adjust the multi-index columns to a flat structure for easier manipulation
-        norms_pivot.columns = norms_pivot.columns.map("{0[1]}_{0[0]}".format)
-        norms_pivot.columns = norms_pivot.columns.str.replace(r"^_", "", regex=True).str.replace(r"_std", "", regex=True)
+        norms_pivot.columns = (
+            norms_pivot.columns
+                .map("{0[1]}_{0[0]}".format)
+                .str.replace(r"^_", "", regex=True)
+                .str.replace(r"_std", "", regex=True)
+        )
 
         # Compute standardized scores for each column in the group scores DataFrame
         return group_scores.apply(self.get_standard_scores_from_table, norms=norms_pivot)

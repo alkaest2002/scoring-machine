@@ -141,16 +141,18 @@ class Standardizer:
             axis=1
         )
 
-        results: list[pd.DataFrame] = []
-        for _, group in test_scores_with_norms_id.groupby(["norms_id"], sort=False):
-            result = self.compute_standard_scores_for_group(group)
-            results.append(result)
-
-        self.data_container.test_standard_scores = (
-            pd.concat(results)
-            .add_prefix("std__")
-            .sort_index()
+        # Group the combined DataFrame by norms_id and compute standardized scores for each group
+        results: pd.DataFrame = (
+            test_scores_with_norms_id.groupby(["norms_id"], sort=False)
+                [test_scores_with_norms_id.columns]
+                .apply(self.compute_standard_scores_for_group)
+                .add_prefix("std__")
+                .droplevel(0)
+                .sort_index()
         )
+
+        # Assign the computed standardized scores to the DataContainer instance
+        self.data_container.test_standard_scores = results
 
         # Return the updated DataContainer instance with standardized scores included
         return self.data_container

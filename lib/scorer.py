@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
     from lib.data_container import DataContainer
     from lib.test_specs import TestSpecs
 
@@ -67,14 +69,17 @@ class Scorer:
         Returns:
             pd.DataFrame: Binary matrix of items by scale.
         """
-        n_items = self.test_specs.get_spec("length")
-        n_scales = len(self.test_scales)
+        n_items: int = self.test_specs.get_spec("length")
+        n_scales: int = len(self.test_scales)
 
         # Pre-allocate matrix
-        matrix = np.zeros((n_items, n_scales), dtype=np.int8)
+        matrix: NDArray[np.int8] = np.zeros((n_items, n_scales), dtype=np.int8)
 
-        # Fill matrix
-        item_idx = 1 if item_type == "straight" else 2
+        # Determine item index based on type
+        item_idx: int = 1 if item_type == "straight" else 2
+
+        # Iterate over scales
+        # Each scale is a tuple: (scale_name, straight_items, reversed_items)
         for scale_idx, scale in enumerate(self.test_specs.get_spec("scales")):
             # Get items for the specified type
             items = scale[item_idx]
@@ -96,10 +101,13 @@ class Scorer:
         Returns:
             pd.DataFrame: DataFrame with 'straight' and 'reversed' rows, scales as columns.
         """
-        counts = np.vstack([
+        # Sum along the rows to get counts per scale
+        # And stack them vertically
+        counts: NDArray[np.int64] = np.vstack([
             self.straight_items_by_scale.values.sum(axis=0),
             self.reversed_items_by_scale.values.sum(axis=0)
         ])
+
         return pd.DataFrame(
             counts,
             index=["straight", "reversed"],
@@ -115,11 +123,11 @@ class Scorer:
             pd.DataFrame: DataFrame with scales as columns and MultiIndex ['straight', 'reversed'] showing missing counts.
         """
         # Vectorized computation using numpy @ operator
-        answers_isna = self.answers.isna().values  # (n_persons, n_items)
+        answers_isna: NDArray[np.bool_] = self.answers.isna().values  # (n_persons, n_items)
 
         # Matrix multiplication: (n_persons, n_items) @ (n_items, n_scales)
-        missing_straight = answers_isna @ self.straight_items_by_scale.values  # (n_persons, n_scales)
-        missing_reversed = answers_isna @ self.reversed_items_by_scale.values  # (n_persons, n_scales)
+        missing_straight: NDArray[np.int64] = answers_isna @ self.straight_items_by_scale.values  # (n_persons, n_scales)
+        missing_reversed: NDArray[np.int64] = answers_isna @ self.reversed_items_by_scale.values  # (n_persons, n_scales)
 
         # Concatenate as separate columns with prefixes
         # The resulting DataFrame will have a MultiIndex for columns
@@ -137,9 +145,9 @@ class Scorer:
         Returns:
             pd.DataFrame: Total missing items per person per scale.
         """
-        answers_isna = self.answers.isna().values
-        total_items_matrix = self.straight_items_by_scale.values + self.reversed_items_by_scale.values
-        total_missing = answers_isna @ total_items_matrix
+        answers_isna: NDArray[np.bool_] = self.answers.isna().values
+        total_items_matrix: NDArray[np.int64] = self.straight_items_by_scale.values + self.reversed_items_by_scale.values
+        total_missing: NDArray[np.int64] = answers_isna @ total_items_matrix
 
         return pd.DataFrame(
             total_missing,
@@ -156,7 +164,7 @@ class Scorer:
             pd.DataFrame: Raw scores for straight items (persons x scales).
         """
         # Fill NaN with 0, then matrix multiply
-        raw_scores = self.answers.fillna(0).values @ self.straight_items_by_scale.values
+        raw_scores: NDArray[np.int64] = self.answers.fillna(0).values @ self.straight_items_by_scale.values
         return pd.DataFrame(raw_scores, index=self.answers.index, columns=self.test_scales)
 
     @cached_property
@@ -168,12 +176,14 @@ class Scorer:
             pd.DataFrame: Raw scores for reversed items (persons x scales).
         """
         # Maximum possible score for likert scale
-        likert_sum = sum(self.test_specs.get_spec("likert").values())
+        likert_sum: int = sum(self.test_specs.get_spec("likert").values())
 
         # Reverse scoring: |likert_sum - answer|
-        raw_scores = (
-            self.answers.fillna(likert_sum)
-                .rsub(likert_sum).values @ self.reversed_items_by_scale.values
+        raw_scores: NDArray[np.int64] = (
+            self.answers
+                .fillna(likert_sum)
+                .rsub(likert_sum).values
+            @ self.reversed_items_by_scale.values
         )
 
         return pd.DataFrame(raw_scores, index=self.answers.index, columns=self.test_scales)
@@ -198,10 +208,11 @@ class Scorer:
             pd.DataFrame: Raw corrected scores per scale.
         """
         # Total number of items per scale (straight + reversed)
-        total_items_per_scale = self.count_items_by_scale.sum(axis=0).values
+        total_items_per_scale: NDArray[np.int64] =\
+            self.count_items_by_scale.sum(axis=0).values.astype(np.int64)
 
         # Raw corrected = mean score x total items in scale
-        raw_corrected = self.mean_scores.values * total_items_per_scale
+        raw_corrected: NDArray[np.float64] = (self.mean_scores.values * total_items_per_scale).astype(np.float64)
 
         return pd.DataFrame(
             raw_corrected,
@@ -219,12 +230,12 @@ class Scorer:
         """
         with np.errstate(divide="ignore", invalid="ignore"):
             # Total items answered per scale
-            total_items = self.count_items_by_scale.sum(axis=0).values
-            total_missing = self.missing_by_scale.values
-            items_answered = total_items - total_missing
+            total_items: NDArray[np.int64] = self.count_items_by_scale.sum(axis=0).values.astype(np.int64)
+            total_missing: NDArray[np.int64] = self.missing_by_scale.values.astype(np.int64)
+            items_answered: NDArray[np.int64] = total_items - total_missing
 
             # Compute mean
-            mean = self.raw_scores.values / items_answered
+            mean: NDArray[np.float64] = (self.raw_scores.values / items_answered).astype(np.float64)
 
             return pd.DataFrame(
                 np.round(mean, 2),
@@ -244,8 +255,8 @@ class Scorer:
         return pd.concat([
             self.norms_id,
             self.missing_by_scale.add_prefix("missing__"),
-            self.raw_scores.astype(int).add_prefix("raw__"),
-            self.raw_corrected_scores.astype(int).add_prefix("raw_corrected__"),
+            self.raw_scores.add_prefix("raw__"),
+            self.raw_corrected_scores.add_prefix("raw_corrected__"),
             self.mean_scores.add_prefix("mean__"),
         ], axis=1)
 

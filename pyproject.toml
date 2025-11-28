@@ -32,11 +32,13 @@ disallow_untyped_decorators = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
 disallow_any_unimported = true
+exclude = "marimo/*.*"
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+
 
 # Handle third-party libraries without type stubs
 [[tool.mypy.overrides]]
@@ -75,6 +77,13 @@ ignore = [
     "PLR0912", # too many branches
     "PLR2004", # magic value used in comparison
 ]
+exclude = [
+    "venv",
+    ".venv",
+    "env",
+    ".env",
+    "marimo",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
@@ -98,3 +107,4 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = false
 docstring-code-line-length = "dynamic"
+

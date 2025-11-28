@@ -12,9 +12,9 @@
                     {{ table_header(test_specs) }}
                 </thead>
                 <tbody>
-                    {{ table_row("s1", "Scala 1", test_results, test_specs) }}
-                    {{ table_row("s2", "Scala 2", test_results, test_specs) }}
-                    {{ table_row("s3", "Scala 3", test_results, test_specs) }}
+                    {{ table_row("s1", "Scala 1", test_results, test_specs, 0) }}
+                    {{ table_row("s2", "Scala 2", test_results, test_specs, 1) }}
+                    {{ table_row("s3", "Scala 3", test_results, test_specs, 2) }}
                 </tbody>
             </table>
             {{ table_footer(5) }}

@@ -12,11 +12,11 @@
                     {{ table_header(test_specs) }}
                 </thead>
                 <tbody>
-                    {{ table_row("dep", "Temperamento depressivo", test_results, test_specs) }}
-                    {{ table_row("cyc", "Temperamento ciclotimico", test_results, test_specs) }}
-                    {{ table_row("hyp", "Temperamento ipertimico", test_results, test_specs) }}
-                    {{ table_row("irr", "Tempertamento irritabile", test_results, test_specs) }}
-                    {{ table_row("anx", "Temperamento ansioso", test_results, test_specs) }}
+                    {{ table_row("dep", "Temperamento depressivo", test_results, test_specs, 0) }}
+                    {{ table_row("cyc", "Temperamento ciclotimico", test_results, test_specs, 1) }}
+                    {{ table_row("hyp", "Temperamento ipertimico", test_results, test_specs, 2) }}
+                    {{ table_row("irr", "Tempertamento irritabile", test_results, test_specs, 3) }}
+                    {{ table_row("anx", "Temperamento ansioso", test_results, test_specs, 4) }}
                 </tbody>
             </table>
             {{ table_footer(5) }}

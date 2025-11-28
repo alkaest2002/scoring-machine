@@ -4,6 +4,7 @@
     <tr>
         <th>Codice</th>
         <th>Nome scala</th>
+        <th class="text-center">ST</th>
         <th class="text-center">RO</th>
         <th class="text-center">PG</th>
         <th class="text-center">PC</th>
@@ -18,10 +19,11 @@
     <span>Data valutazione:</span> <span class="text-bold">{{ assessment_date }}</span>
 {% endmacro %}
 
-{% macro table_row(scale_code, scale_name, test_results, test_specs)  %}
+{% macro table_row(scale_code, scale_name, test_results, test_specs, idx)  %}
     <tr>
         <td class="scale-code">{{ scale_code | upper | replace("_", " ") }}</td>
         <td>{{ scale_name }}</td>
+        <td class="score">{{ (test_specs.scales[idx][1] | length) + (test_specs.scales[idx][2] | length) }}</td>
         <td class="score">{{ test_results["missing__" +scale_code] }}</td>
         <td class="score">{{ test_results["raw__" +scale_code] }}</td>
         <td class="score">{{ test_results["raw_corrected__" +scale_code] }}</td>
@@ -62,7 +64,7 @@
 {% if n_legend %}
     <div class="table-apa-footer">
         <p>
-            RO Omesse &nbsp; PG Grezzo &nbsp; PC Grezzo corretto &nbsp; PM Media &nbsp; PS Standard
+            ST Nr item RO Omesse &nbsp; PG Grezzo &nbsp; PC Corretto &nbsp; PM Medio &nbsp; PS Standardizzato
         </p>
         {% if n_legend == 7 %}
         <p>

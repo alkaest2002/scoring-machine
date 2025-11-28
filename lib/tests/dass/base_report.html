@@ -12,10 +12,10 @@
                     {{ table_header(test_specs) }}
                 </thead>
                 <tbody>
-                    {{ table_row("dep", "Depressione", test_results, test_specs) }}
-                    {{ table_row("anx", "Ansia", test_results, test_specs) }}
-                    {{ table_row("sts", "Stress", test_results, test_specs) }}
-                    {{ table_row("tot", "Disagio totale", test_results, test_specs) }}
+                    {{ table_row("dep", "Depressione", test_results, test_specs, 0) }}
+                    {{ table_row("anx", "Ansia", test_results, test_specs, 1) }}
+                    {{ table_row("sts", "Stress", test_results, test_specs, 2) }}
+                    {{ table_row("tot", "Disagio totale", test_results, test_specs, 3) }}
                 </tbody>
             </table>
             {{ table_footer(5) }}

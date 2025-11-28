@@ -12,12 +12,12 @@
                     {{ table_header(test_specs) }}
                 </thead>
                 <tbody>
-                    {{ table_row("sa", "Accettazione di sé", test_results, test_specs) }}
-                    {{ table_row("pg","Crescita personale", test_results, test_specs) }}
-                    {{ table_row("pl", "Progettualità", test_results, test_specs) }}
-                    {{ table_row("au", "Autonomia", test_results, test_specs) }}
-                    {{ table_row("em", "Efficacia personale", test_results, test_specs) }}
-                    {{ table_row("pr", "Relazioni positive", test_results, test_specs) }}
+                    {{ table_row("sa", "Accettazione di sé", test_results, test_specs, 0) }}
+                    {{ table_row("pg","Crescita personale", test_results, test_specs, 1) }}
+                    {{ table_row("pl", "Progettualità", test_results, test_specs, 2) }}
+                    {{ table_row("au", "Autonomia", test_results, test_specs, 3) }}
+                    {{ table_row("em", "Efficacia personale", test_results, test_specs, 4) }}
+                    {{ table_row("pr", "Relazioni positive", test_results, test_specs, 5) }}
                 </tbody>
             </table>
             {{ table_footer(5) }}

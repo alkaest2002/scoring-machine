@@ -30,12 +30,12 @@
                     {{ table_header(test_specs) }}
                 </thead>
                 <tbody>
-                    {{ table_row("wb", "Disagio psicologico", test_results, test_specs) }}
-                    {{ table_row("pro", "Problemi riferiti", test_results, test_specs) }}
-                    {{ table_row("fun", "Mancanza di efficacia personale e/o sociale", test_results, test_specs) }}
-                    {{ table_row("risk", "Ideazione/Condotte auto o etero-aggressive", test_results, test_specs) }}
-                    {{ table_row("tot_risk", "Totale (senza item risk)", test_results, test_specs) }}
-                    {{ table_row("tot", "Totale", test_results, test_specs) }}
+                    {{ table_row("wb", "Disagio psicologico", test_results, test_specs, 0) }}
+                    {{ table_row("pro", "Problemi riferiti", test_results, test_specs, 1) }}
+                    {{ table_row("fun", "Mancanza di efficacia personale e/o sociale", test_results, test_specs, 2) }}
+                    {{ table_row("risk", "Ideazione/Condotte auto o etero-aggressive", test_results, test_specs, 3) }}
+                    {{ table_row("tot_risk", "Totale (senza item risk)", test_results, test_specs, 4) }}
+                    {{ table_row("tot", "Totale", test_results, test_specs, 5) }}
                 </tbody>
             </table>
             {{ table_footer(5) }}

@@ -160,6 +160,10 @@ class DataProvider:
         # Get the path to the test specs
         test_specs_filepath: Path = self.get_test_path("specs")
 
+        # Raise error if specs file does not exist
+        if not test_specs_filepath.exists():
+            raise FileNotFoundError(f"Test specifications file not found at {test_specs_filepath}")
+
         # Parse test specs
         with test_specs_filepath.open("rb") as file:
             test_specs_json = orjson.loads(file.read())

@@ -52,6 +52,7 @@ class Sanitizer:
                 .apply(lambda x: " ".join(sorted(x.split(" "))))
         )
 
+        # Return final norms sorted
         return final_norms
 
     def sanitize_test_answers(self) -> pd.DataFrame | pd.Series:
@@ -96,14 +97,13 @@ class Sanitizer:
         # Columns required are: ["subject_id", "norms_id", "i1", "i2", ..., "in"]
         requested_columns: list[str] = ["subject_id", "norms_id"] + [f"i{i}" for i in range(1, test_length + 1)]
 
-        # Check for inconsistencies between the expected columns and the actual data columns
-        # Using symmetric_difference to identify any mismatch in column names
-        sym_dif: pd.Index = pd.Index(requested_columns).symmetric_difference(self.data_container.data.columns)
+        # Make sure requested columns are included in the DataFrame columns
+        missing_cols: pd.Index = pd.Index(requested_columns).difference(self.data_container.data.columns)
 
-        # Raise a ValidationError if requested columns do not match the DataFrame columns
-        if sym_dif.shape[0] > 0:
+        # Raise a ValidationError if there are missing columns in the DataFrame
+        if missing_cols.shape[0] > 0:
             raise ValidationError("Test data is not compatible with test specifications. "
-                f"Missing or unexpected columns: {list(sym_dif)}")
+                f"Missing columns: {list(missing_cols)}")
 
         # Sanitize and combine "subject_id" column, sanitized norms, and sanitized answers
         sanitized_data: pd.DataFrame = pd.concat([

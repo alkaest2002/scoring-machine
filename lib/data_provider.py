@@ -89,14 +89,37 @@ class DataProvider:
         Returns:
             Path: The relative path to the specified test file.
         """
+        # Handle data files
         if type == "data":
-            filepath = self.get_folderpath("data") / f"{self.test_name}_data.csv"
+
+            # Use glob to find all files matching data in filename
+            data_files: list[Path] = list(self.get_folderpath("data").glob(f"*{self.test_name}*.csv"))
+
+            # Ensure at least one file is found
+            if not data_files:
+                raise FileNotFoundError(f"No data files found for test {self.test_name}")
+
+            # Notify user in case of multiple files found
+            if len(data_files) > 1:
+                print(  # noqa: T201
+                    f"Multiple data files found for test {self.test_name}. "
+                    f"Using the most recently modified one: {data_files[0].name}"
+                )
+
+            # Sort files by modification time, descending
+            data_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+
+            # Assume the most recently modified file is the correct one
+            filepath = data_files[0]
+
+        # Handle norms
         elif type == "norms":
             filepath = (
                 self.get_folderpath("tests")
                 / self.test_name
                 / f"{self.test_name}_norms.csv"
             )
+        # Handle specs
         else:
             filepath = (
                 self.get_folderpath("tests")

@@ -98,6 +98,9 @@ class Reporter:
         # Create batches of data (PDF generation is heavy)
         batches: batched[str] = batched(self.test_results, n=reports_per_batch, strict=False)
 
+        # Initialize rendered reports list
+        rendered_reports: list[tuple[Path, str]] = []
+
         # Loop through all batches
         for batch_index, batch_test_results in enumerate(batches, 1):
 
@@ -105,7 +108,7 @@ class Reporter:
             for batch_report_index, test_results in enumerate(batch_test_results, 1):
 
                 # Define global index
-                report_index = f"{str((batch_index-1) * reports_per_batch + batch_report_index).zfill(4)}"
+                report_index: str = f"batch-{str(batch_index).zfill(3)}-report-{str(batch_report_index).zfill(3)}"
 
                 # Render the HTML template with test specifications, test results, and assessment date
                 rendered_template: str = self.report_template.render(
@@ -114,23 +117,30 @@ class Reporter:
                     assessment_date=assessment_date  # The provided assessment date
                 )
 
-                if split_reports:
-                    # Generate individual PDF report for each test result
-                    subject_id: str = test_results["subject_id"] # type: ignore[index]
-                    filename: str = f"{self.test_name}-{report_index}-{subject_id}.pdf"
-                    output_filepath: Path = XEROX_PATH / filename
+                # Generate individual PDF report for each test result
+                subject_id: str = test_results["subject_id"] # type: ignore[index]
+                filename: str = f"{self.test_name}-{report_index}-{subject_id}.pdf"
+                output_filepath: Path = XEROX_PATH / filename
 
-                    # Persist the rendered HTML as a PDF file
-                    HTML(string=rendered_template).write_pdf(output_filepath)
-                else:
-                    # Append the rendered HTML content for consolidation
+                # Persist the rendered HTML as a PDF file
+                rendered_reports.append((output_filepath, rendered_template))
+
+            # Handle PDF generation based on `split_reports` flag
+            if split_reports:
+                # Generate individual PDF reports for each rendered template in the batch
+                for output_filepath, rendered_template in rendered_reports:
+                    HTML(string=rendered_template).write_pdf(target=output_filepath)
+
+            # Generate combined PDF report for the entire batch
+            else:
+                # Accumulate rendered HTML for combined report
+                for _, rendered_template in rendered_reports:
                     reports += rendered_template
 
-            if not split_reports:
-                # Save the combined report as a single PDF
-                output_filepath = XEROX_PATH / f"{self.test_name}-{str(batch_index).zfill(3)}.pdf"
+                # Define output filepath for the combined batch report
+                filename = f"{self.test_name}-batch-{str(batch_index).zfill(3)}.pdf"
+                output_filepath = XEROX_PATH / filename
 
-                # Persist the combined HTML content as a single PDF file
-                HTML(string=reports).write_pdf(output_filepath)
-
+                # Persist the combined rendered HTML as a PDF file
+                HTML(string=reports).write_pdf(target=output_filepath)
 

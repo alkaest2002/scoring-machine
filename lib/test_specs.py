@@ -136,7 +136,7 @@ class TestSpecs:
         Retrieve a specific value from the test specifications using a dot-separated JSON path.
 
         Args:
-            path (Union[str, None]): A dot-separated string specifying the hierarchical keys to the desired value.
+            path (str | None): A dot-separated string specifying the hierarchical keys to the desired value.
                                      If None, the full test specifications are returned.
 
         Returns:

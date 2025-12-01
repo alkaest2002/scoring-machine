@@ -86,9 +86,13 @@ class DataContainer:
         Returns:
             pd.DataFrame: A DataFrame containing subject ids, answers, raw-related scores and standardized scores.
         """
+
         return pd.concat([
             self.data_subject_ids,
             self.data_answers,
+            pd.DataFrame({
+                "norms_id_length": self.data_norms.str.split(" ").str.len()
+            }),
             self.test_scores,
             self.test_standard_scores], axis=1)
 

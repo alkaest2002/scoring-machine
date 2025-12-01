@@ -65,15 +65,13 @@ class Standardizer:
         )
 
         # Replace the index of standardized scores with the original series index
+        # to maintain alignment with the input data
         standard_scores.index = sorted_series.index
-
-        # Restore the original order of the series by sorting standardized scores by their index
-        standard_scores = standard_scores.sort_index()
 
         # Drop unnecessary columns
         standard_scores = standard_scores.iloc[:, 3:]
 
-        # Pick relevant columns and convert data to a list of dictionaries
+        # Return data as dict
         return standard_scores.to_dict(orient="records")
 
     def compute_standard_scores_for_group(

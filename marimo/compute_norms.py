@@ -25,18 +25,27 @@ def _(Path):
 
     TEST_PATH = Path("./lib/tests/core")
 
-    data_norms = pd.DataFrame({
+    data_norms_community = pd.DataFrame({
         "scale": ["wb","pro","fun","risk", "tot_risk", "tot","wb","pro","fun","risk", "tot_risk", "tot"],
-        "norms_id": ["ita_comm_m","ita_comm_m","ita_comm_m","ita_comm_m","ita_comm_m","ita_comm_m","ita_comm_f","ita_comm_f","ita_comm_f","ita_comm_f","ita_comm_f","ita_comm_f"],
+        "norms_id": ["it_m_com","it_m_com","it_m_com","it_m_com","it_m_com","it_m_com","it_f_com","it_f_com","it_f_com","it_f_com","it_f_com","it_f_com"],
         "mean": [.98, .84, 1.04, .16, .95, .81, 1.26, .99, 1.01, .11, 1.03, .87],
         "ds": [.69, .60, .56, .42, .55, .50, .85, .65, .51, .33, .56, .49]
     })
+
+    data_norms_clinical = pd.DataFrame({
+        "scale": ["wb","pro","fun","risk", "tot_risk", "tot","wb","pro","fun","risk", "tot_risk", "tot"],
+        "norms_id": ["it_m_cli","it_m_cli","it_m_cli","it_m_cli","it_m_cli","it_m_cli","it_f_cli","it_f_cli","it_f_cli","it_f_cli","it_f_cli","it_f_cli"],
+        "mean": [1.95, 1.65, 1.56, .38, 1.65, 1.43, 2.47, 2.00, 1.68, .44, 1.93, 1.66],
+        "ds": [.93, .78, .63, .62,.66, .60, .94, .86, .69, .63, .72, .67]
+    })
+
+    data_norms = pd.concat([data_norms_community, data_norms_clinical])
 
     with open(TEST_PATH / f"{TEST_PATH.name}_specs.json", "r") as fin:
         test_specs = TestSpecs(json.loads(fin.read()))
 
     norms = create_normative_table(test_specs, data_norms)
-    norms.head(6)
+    norms.tail(6)
     return TEST_PATH, norms
 
 

@@ -13,6 +13,14 @@ if TYPE_CHECKING:
 # Initialize the Jinja2 environment for rendering HTML templates
 jinja_env: Environment = Environment(loader=FileSystemLoader([TESTS_PATH]))
 
+def convert_std_dict(value: dict[str, Any], n: int) -> list[dict[str, Any]]:
+    # Converts a dictionary of standardized scores into a list of dictionaries,
+    # Each dictionary contains std, std_interpretation, std_min, std_max keys
+    items: list[tuple[str, Any]] = list(value.items())
+    return [dict(items[i::n]) for i in range(n)]
+
+jinja_env.filters['convert_std_dict'] = convert_std_dict
+
 
 class Reporter:
     """

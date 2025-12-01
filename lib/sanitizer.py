@@ -43,13 +43,14 @@ class Sanitizer:
             lambda x: set(str(x).split(" ")).issubset(available_norms)
         )
 
-        # Replace invalid entries with the `UNAVAILABLE_NORMS` constant
-        # And sort multiple norms alphabetically for consistency
-        # And for avoiding grouping issues later on
+        # 1. Replace invalid entries with the `UNAVAILABLE_NORMS` constant
+        # 2. Make sure there are no duplicate norms listed
+        # 3. Sort multiple norms alphabetically for consistency
+        # All of that for avoiding discrepancies in norms representation
         final_norms: pd.Series = (
             self.data_container.data_norms
                 .where(condition, UNAVAILABLE_NORMS)
-                .apply(lambda x: " ".join(sorted(x.split(" "))))
+                .apply(lambda x: " ".join(sorted(set(x.split(" ")))))
         )
 
         # Return final norms sorted

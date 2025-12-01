@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 
 if TYPE_CHECKING:
+
     from collections.abc import Hashable
 
     from lib.data_container import DataContainer
@@ -27,7 +28,7 @@ class Standardizer:
     def get_standard_scores_from_table(
         self,
         series: pd.Series,
-        norms: pd.DataFrame
+        norms: pd.DataFrame,
     ) -> list[dict[Hashable, Any]]:
         """
         Maps raw scale scores into standardized scores using lookup from norms.
@@ -69,8 +70,11 @@ class Standardizer:
         # Restore the original order of the series by sorting standardized scores by their index
         standard_scores = standard_scores.sort_index()
 
-        # Convert the standardized scores to a list of dictionaries
-        return standard_scores.iloc[:, 3:].to_dict(orient="records")
+        # Drop unnecessary columns
+        standard_scores = standard_scores.iloc[:, 3:]
+
+        # Pick relevant columns and convert data to a list of dictionaries
+        return standard_scores.to_dict(orient="records")
 
     def compute_standard_scores_for_group(
         self, group_data: pd.DataFrame) -> pd.DataFrame:
@@ -97,10 +101,23 @@ class Standardizer:
         # Extract relevant norms data based on the parsed norms IDs
         test_norms: pd.DataFrame = all_norms[all_norms["norms_id"].isin(norms_list)]
 
-        # Identify relevant columns for standardized scores and interpretations
-        relevant_columns: list[str] = [col for col in ["std", "std_interpretation"] if col in test_norms.columns]
+        # Compute standard min value and standard max value for each combination of norms_id and scale
+        standard_min_max = (
+            test_norms.groupby(["norms_id", "scale"])[["norms_id", "scale", "std"]].agg(
+                std_min=pd.NamedAgg(column="std", aggfunc="min"),
+                std_max=pd.NamedAgg(column="std", aggfunc="max")
+            ).reset_index()
+        )
 
-        # Create a pivot table for norms, grouping by scale, raw values, and norms IDs
+        # Merge min and max standard scores back into the test norms DataFrame
+        test_norms = test_norms.merge(standard_min_max, on=["norms_id", "scale"], how="left")
+
+        # Identify relevant columns to include in the final output
+        # Standard score, interpreteation (if available), standard_min, standard_max
+        relevant_columns: list[str] = [
+            col for col in ["std", "std_interpretation", "std_min", "std_max"] if col in test_norms.columns]
+
+        # Create a pivot table for norms, grouping by scale, raw values, and norms_id
         norms_pivot: pd.DataFrame = test_norms.pivot_table(
             index=["scale", "raw"],
             columns=["norms_id"],
@@ -113,11 +130,13 @@ class Standardizer:
             norms_pivot.columns
                 .map("{0[1]}_{0[0]}".format)
                 .str.replace(r"^_", "", regex=True)
-                .str.replace(r"_std", "", regex=True)
         )
 
         # Compute standardized scores for each column in the group scores DataFrame
-        return group_scores.apply(self.get_standard_scores_from_table, norms=norms_pivot)
+        compute_standardized_scores =\
+            group_scores.apply(self.get_standard_scores_from_table, norms=norms_pivot)
+
+        return compute_standardized_scores
 
     def compute_standard_scores(self) -> DataContainer:
         """

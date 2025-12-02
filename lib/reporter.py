@@ -127,11 +127,11 @@ class Reporter:
 
                 # Generate individual PDF report for each test result
                 subject_id: str = test_results["subject_id"] # type: ignore[index]
-                filename: str = f"{self.test_name}-{report_index}-{subject_id}.pdf"
+                filename: str = f"{self.test_name}-{report_index}-{subject_id}"
                 output_filepath: Path = XEROX_PATH / filename
 
                 # Persist the rendered HTML as a PDF file
-                rendered_reports.append((output_filepath, rendered_template))
+                rendered_reports.append((output_filepath.with_suffix(".pdf"), rendered_template))
 
             # Handle PDF generation based on `split_reports` flag
             if split_reports:
@@ -146,9 +146,13 @@ class Reporter:
                     reports += rendered_template
 
                 # Define output filepath for the combined batch report
-                filename = f"{self.test_name}-batch-{str(batch_index).zfill(3)}.pdf"
+                filename = f"{self.test_name}-batch-{str(batch_index).zfill(3)}"
                 output_filepath = XEROX_PATH / filename
 
                 # Persist the combined rendered HTML as a PDF file
-                HTML(string=reports).write_pdf(target=output_filepath)
+                HTML(string=reports).write_pdf(target=output_filepath.with_suffix(".pdf"))
+
+                # For debugging
+                # with output_filepath.with_suffix(".html").open("w") as html_file:
+                #     html_file.write(reports)  # noqa: ERA001
 

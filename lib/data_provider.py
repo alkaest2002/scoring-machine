@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING, Any, Literal
 
-import numpy as np
 import orjson
 import pandas as pd
 
 from lib import BASE_PATH, DATA_PATH, LIB_PATH, TESTS_PATH, XEROX_PATH
-from lib.errors import NotFoundError
+from lib.errors import NotFoundError, ValidationError
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -178,20 +177,30 @@ class DataProvider:
             pd.DataFrame: A DataFrame containing the norms data.
                           If the file does not exist, returns an empty DataFrame.
         """
+        # Intialize norms
+        norms: pd.DataFrame = pd.DataFrame()
+
+        # Define required columns
+        required_columns: pd.Index =\
+            pd.Index(["norms_id","scale","raw","std","std_interpretation"])
+
         # Get path to norms
         norms_filepath: Path = self.get_test_path("norms")
 
-        # Read norms if they exist
+        # If norms file exists
         if norms_filepath.exists():
-            return pd.read_csv(
-                norms_filepath, dtype={"raw": np.float64, "std": np.float64}
-            )
-        else:
-            # Retrun void DataFrame
-            return pd.DataFrame()
+
+            # Load norms
+            norms = pd.read_csv(norms_filepath)
+
+            # Check for existence of required columns
+            if not required_columns.equals(norms.columns):
+                raise ValidationError(f"Norms at {norms_filepath.name} are invalid.")
+
+        return norms
 
     def persist(self, data: pd.DataFrame | dict[str, Any]) -> None:
-        # If data is an instance of pd.Dataframe, save it as a csv
+        # If data is an instance of pd.DataFrame, save it as a csv
         if isinstance(data, pd.DataFrame):
             data.to_csv(
                 self.get_folderpath("xerox") / f"{self.test_name}_scored.csv",

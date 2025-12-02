@@ -110,16 +110,11 @@ class Standardizer:
         # Merge min and max standard scores back into the test norms DataFrame
         test_norms = test_norms.merge(standard_min_max, on=["norms_id", "scale"], how="left")
 
-        # Identify relevant columns to include in the final output
-        # Standard score, interpreteation (if available), standard_min, standard_max
-        relevant_columns: list[str] = [
-            col for col in ["std", "std_interpretation", "std_min", "std_max"] if col in test_norms.columns]
-
         # Create a pivot table for norms, grouping by scale, raw values, and norms_id
         norms_pivot: pd.DataFrame = test_norms.pivot_table(
             index=["scale", "raw"],
             columns=["norms_id"],
-            values=relevant_columns,
+            values= ["std", "std_interpretation", "std_min", "std_max"],
             aggfunc=lambda x: x  # Preserve the original values
         ).reset_index()
 

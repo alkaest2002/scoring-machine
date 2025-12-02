@@ -1,0 +1,109 @@
+{% extends "_base/_base.html" %}
+
+{% macro create_scale(scale_code, scale_descritpion, scale_index) %}
+    <div class="core-scale">
+        <div class="core-scale-code">{{ scale_code }}</div>
+        <div class="core-scale-label">{{ scale_descritpion }}</div>
+        <div class="core-scale-omitted">
+            {% set scale_length = (test_specs["scales"][scale_index][1] | length) + (test_specs["scales"][scale_index][2] | length) %}
+            {{ scale_length - test_results["missing__" ~ scale_code] }} / {{ scale_length }}
+        </div>
+        <div class="core-scale-mean">
+            {{ test_results["mean__" ~ scale_code] }}
+        </div>
+        {% set standard_scores_obj = test_results["std__mean__" ~ scale_code] %}
+            {% if standard_scores_obj %}
+                {% if test_results.norms_id_length == 1 %}
+                <div class="core-scale-std">
+                    {{ (standard_scores_obj.values() | list)[0] }}
+                </div>
+                {% else %}
+                    {% set norms_results_list = standard_scores_obj | convert_std_dict(test_results.norms_id_length) %}
+                    {% for norms_results in norms_results_list %}
+                        <div class="scale-std">
+                            {% set norm_values = norms_results.values() | list %}
+                            {% set prop_fill = ((norm_values[2] -norm_values[0])/(norm_values[2] - norm_values[3])) * 100 | round(0) %}
+                            <div style="display: flex;align-items:center;gap:6px">
+                                <div style="width: 30px;">{{ norm_values[0] | round(0) }}</div>
+                                <div style="flex-grow:1">
+                                    <div style="display: flex;width: 100%;">
+                                        {% set width_fore = (prop_fill | string)  ~ "%" %}
+                                        {% set width_back = ((100 - prop_fill) | string)  ~ "%" %}
+                                        <div style="height:1em;width: {{ width_fore }};background-color: #aaa;"></div>
+                                        <div style="height:1em;width: {{ width_back }};background-color: #ddd;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+            {% endif %}
+        {% else %}
+            <div><span>n.d.</span></div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% block style %}
+    <style>
+        .core-flags {
+            margin: 24pt 0 6pt 0;
+        }
+
+        .core-scales {
+            display: flex;
+            gap: 12px;
+            margin-top: 12pt;
+            flex-wrap: wrap;
+        }
+        
+        .core-scale {
+            display: flex;
+            width: 33%;
+            flex-direction: column;
+            gap: 6px;
+            padding: 12px;
+            border: 1px solid black;
+        }
+
+        .core-scale > div {
+            text-align: center;
+        }
+
+        .core-scale-code {
+            font-size: 2em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="page">
+        <div>
+            <h1 class="report-title">Report CORE</h1>
+            <div class="report-bio">
+                {{ subject_data(test_results) }}
+            </div>
+            <div class="core-flags">
+                {% set i6 = test_results["i6"] %}
+                {% set i9 = test_results["i9"] %}
+                {% set i16 = test_results["i16"] %}
+                {% set i22 = test_results["i22"] %}
+                {% set i24 = test_results["i24"] %}
+                {% set i34 = test_results["i34"] %}
+                <p>Presenza di risposte anti-convervative &rarr; {% if i9+i16+i24+i34 > 0 %}<span class="text-bold">Sì</span>{% else %}<span class="text-italic">No</span>{% endif %}</p> 
+                <p>Presenza di risposte etero-aggressive &rarr; {% if i6+i22 > 0 %}<span class="text-bold">Sì</span>{% else %}<span class="text-italic">No</span>{% endif %}</p> 
+            </div>
+            <div class="core-scales">
+                {{ create_scale("wb", "Disagio psicologico", 0)}}
+                {{ create_scale("pro", "Problemi riferiti",  1)}}
+                {{ create_scale("fun", "Disfunzionalità", 2)}}
+                {{ create_scale("risk", "Comportamenti a rischio",  3)}}
+                {{ create_scale("tot_risk", "Totale senza rischio", 5)}}
+                {{ create_scale("tot", "Totale", 5)}}
+            </div>
+        </div>
+        {{ page_footer() }}
+    </div>
+{% endblock %}

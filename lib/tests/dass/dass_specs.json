@@ -15,5 +15,5 @@
     "available_norms" : ["ita_comm"],
     "type_of_raw_score": "raw"
   },
-  "report": "base_report"
+  "report": "report"
 }

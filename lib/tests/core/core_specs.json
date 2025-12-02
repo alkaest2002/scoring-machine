@@ -31,5 +31,5 @@
     "available_norms" : ["it_m_com", "it_m_cli", "it_f_com", "it_f_cli"],
     "type_of_raw_score": "mean"
   },
-  "report": "base_report"
+  "report": "report"
 }

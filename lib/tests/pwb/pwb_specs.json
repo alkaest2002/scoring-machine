@@ -17,5 +17,5 @@
     "type_of_raw_score": "raw",
     "available_norms" : [ "eu_comm" ]
   },
-  "report": "base_report"
+  "report": "report"
 }

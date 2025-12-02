@@ -135,5 +135,5 @@ class DataContainer:
             # Create a copy of test data
             data_to_persist_json: dict[str, Any] = self.test_specs_and_results.copy()
 
-        # Persist the data to disk
-        self.data_provider.persist(data_to_persist_json)
+            # Persist the data to disk
+            self.data_provider.persist(data_to_persist_json)

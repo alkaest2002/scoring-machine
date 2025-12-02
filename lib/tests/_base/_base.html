@@ -41,13 +41,13 @@
             {% if std_raw_label in test_results  %}
                 {% set standard_scores_obj = test_results["std__mean__" + scale_code] %}
             {% endif %}
-            {% if standard_scores_obj %}
-                {% if test_results.norms_id_length == 1 %}
-                    {{ (standard_scores_obj.values() | list)[0] }}
+            {% set norms_results_list = standard_scores_obj | convert_std_dict(test_results.norms_id_length) %}
+            {% if norms_results_list %}
+                {% if (norms_results_list | length) == 1 %}
+                    {{ norms_results_list[0].value }} {{ norms_results_list[0].interpretation }}
                 {% else %}
-                    {% set norms_results_list = standard_scores_obj | convert_std_dict(test_results.norms_id_length) %}
-                    {% for norms_results in norms_results_list %}
-                        {{ (norms_results.items() | list)[0] | join(": ") }}
+                    {% for n in norms_results_list %}
+                        {{ n.norms_id | replace("_", " ") | upper }}: {{ n.value }}{% if not loop.last %} [{{ n.interpretation }}], {% endif %}
                     {% endfor %}
                 {% endif %}
             {% else %}

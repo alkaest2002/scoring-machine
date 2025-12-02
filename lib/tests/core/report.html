@@ -26,13 +26,14 @@
                 </div>
             {% else %}
                 {% set norms_results_list = standard_scores_obj | convert_std_dict(test_results.norms_id_length) %}
-                {% for norms_results in norms_results_list %}
+                {% for norms_results in norms_results_list | reverse %}
                     <div class="core-scale-std">
                         {% set norm_values = norms_results.values() | list %}
                         {% set prop_fill = ((norm_values[0] - norm_values[3])/(norm_values[2] - norm_values[3])) * 100 | round(0) %}
                         {% set empty_fill = 100 - prop_fill | round(0) %}
                         <div class="core-scale-std-label">
-                            Punteggio T {{ norm_values[0] | round(2) }} ({{ test_results.norms_id.split(" ")[loop.index0] | replace("_", " ") | upper }})
+                                {% set reversed_norms = test_results.norms_id.split(" ")[::-1] %}
+                                Punteggio T {{ norm_values[0] | round(2) }} {{ norm_values[1] }} ({{ reversed_norms[loop.index0] | replace("_", " ") | upper }})
                         </div>
                         <div class="core-scale-std-graph">
                             <div class="core-scale-std-min">{{ norm_values[3] | round(0) }}</div>
@@ -194,7 +195,7 @@
                     <td>{{ create_scale("risk", "Comportamenti a rischio",  3)}}</td>
                 </tr>
                 <tr>
-                    <td>{{ create_scale("tot_risk", "Disagio generale (senza rischio)", 4)}}</td>
+                    <td>{{ create_scale("tot_risk", "Disagio generale (senza comportamenti a rischio)", 4)}}</td>
                     <td>{{ create_scale("tot", "Disagio generale", 5)}}</td>
                 </tr>
             </table>

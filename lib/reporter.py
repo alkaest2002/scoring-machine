@@ -1,4 +1,5 @@
 from itertools import batched
+from os.path import commonprefix
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -17,7 +18,25 @@ def convert_std_dict(value: dict[str, Any], n: int) -> list[dict[str, Any]]:
     # Converts a dictionary of standardized scores into a list of dictionaries,
     # Each dictionary contains std, std_interpretation, std_min, std_max keys
     items: list[tuple[str, Any]] = list(value.items())
-    return [dict(items[i::n]) for i in range(n)]
+    final: list[dict[str, Any]] = [dict(items[i::n]) for i in range(n)]
+    # Normalize keys by removing common prefixes
+    for entry in final:
+        # Get all keys of the entry
+        entry_keys: list[str] = list(entry.keys())
+        # Find common prefix
+        common_prefix: str = commonprefix(entry_keys)
+        # Iterate through keys
+        for key in entry_keys:
+            # Create new key by removing common prefix and underscore
+            new_key: str = key[len(common_prefix)+1:] if common_prefix else key
+            # Ensure new_key is not empty
+            new_key = new_key if len(new_key) > 0 else "value"
+            # Update the entry with the new key
+            entry[new_key] = entry.pop(key)
+            # Add norms_id without the trailing underscore
+            entry["norms_id"] = common_prefix[:-4]
+
+    return final
 
 jinja_env.filters['convert_std_dict'] = convert_std_dict
 
